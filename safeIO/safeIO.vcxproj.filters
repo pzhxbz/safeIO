@@ -16,6 +16,18 @@
       <UniqueIdentifier>{25207b84-c63e-4e39-95d4-3a2a1ca70f51}</UniqueIdentifier>
       <Extensions>rc;xml;pem;</Extensions>
     </Filter>
+    <Filter Include="Header Files\sm3">
+      <UniqueIdentifier>{464cb461-a03d-4d76-9ce3-4bf336cc445d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\sm4">
+      <UniqueIdentifier>{78eb5aaf-f708-45db-871e-d620dbedaab3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sm3">
+      <UniqueIdentifier>{55d64c72-ee43-4959-b5a6-b7dcceb52490}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sm4">
+      <UniqueIdentifier>{14b8bc7b-664b-413a-8e67-95e3f75d4a68}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="safeIO_t.c">
@@ -24,31 +36,31 @@
     <ClCompile Include="safeIO.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="sm4.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="sm3.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\sm3</Filter>
+    </ClCompile>
+    <ClCompile Include="sm4.cpp">
+      <Filter>Source Files\sm4</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="safeIO_t.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="sm4.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sm3.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="sm4.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="utils.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="romangol.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sm3.h">
+      <Filter>Header Files\sm3</Filter>
+    </ClInclude>
+    <ClInclude Include="sm4.h">
+      <Filter>Header Files\sm4</Filter>
+    </ClInclude>
+    <ClInclude Include="sm4.hpp">
+      <Filter>Header Files\sm4</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
