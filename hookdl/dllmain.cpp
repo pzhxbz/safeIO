@@ -5,6 +5,7 @@
 #include "sgx_capable.h"
 #include "sgx_uae_service.h"
 #include "sgx_tcrypto.h"
+#include "sgx_process.h"
 #include <stdio.h>
 
 BOOL APIENTRY DllMain(HMODULE hModule,

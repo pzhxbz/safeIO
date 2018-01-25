@@ -3,7 +3,7 @@
 
 #include "stdafx.h"
 #include "hookdl.h"
-#include "safeIO_u.h"
+#include "sgx_process.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <list>
@@ -12,7 +12,7 @@
 #include <fstream>
 
 
-#define ENCLAVE_FILE (L"safeIO.signed.dll")
+
 #pragma comment(lib, "ws2_32.lib")
 #define HOOK_NET_MODULE (L"ws2_32.dll")
 #define HOOK_FILE_MODULE (L"kernel32.dll")
@@ -28,38 +28,11 @@ BYTE createFileAHook[JMP_LENGTH] = { 0 };
 BYTE closeHandleHook[JMP_LENGTH] = { 0 };
 BYTE recvfromHook[JMP_LENGTH] = { 0 };
 
-sgx_enclave_id_t enclaveId = NULL;
-sgx_launch_token_t token = { 0 };
-int updated;
 
 std::list<HANDLE> fileHandles;
 std::list<std::string> fileDecryptList;
 
-bool initializeEnclave()
-{
-	int ret = 0;
-	//Sleep(10000);
-	printf_s("start init enclave\n");
-	if ((ret = sgx_create_enclave(ENCLAVE_FILE, SGX_DEBUG_FLAG, &token, &updated,
-		&enclaveId, NULL)) != SGX_SUCCESS)
-	{
-		printf("Error %#x: cannot create enclave\n", ret);
-		exit(-1);
-		return false;
-	}
 
-	return true;
-}
-bool destroyEnclave()
-{
-	if (sgx_destroy_enclave(enclaveId) != SGX_SUCCESS)
-	{
-		printf("Error: cant destroy enclave\n");
-		return false;
-	}
-
-	return true;
-}
 
 bool initFileList()
 {
@@ -132,14 +105,9 @@ int WINAPI safe_send(SOCKET s, const char * buf, int len, int flags)
 {
 	UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
 
-	if (enclaveId == 0)
-	{
-		initializeEnclave();
-	}
-
 	char* encryptBuf = (char*)malloc(len);
 
-	sendEncrypt(enclaveId, (char*)buf, encryptBuf, len);
+	sgx_sendEncrypt((char*)buf, encryptBuf, len);
 
 	int returnValue = send(s, encryptBuf, len, flags);
 	free(encryptBuf);
@@ -151,16 +119,11 @@ int WINAPI safe_recv(SOCKET s, char * buf, int len, int flags)
 {
 	UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
 
-	if (enclaveId == 0)
-	{
-		initializeEnclave();
-	}
-
 	char* decryptBuf = (char*)malloc(len);
 
 	int returnValue = recv(s, decryptBuf, len, flags);
 
-	recvDecrypt(enclaveId, decryptBuf, buf, len);
+	sgx_recvDecrypt(decryptBuf, buf, len);
 
 	HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
 
@@ -170,12 +133,9 @@ int WINAPI safe_recv(SOCKET s, char * buf, int len, int flags)
 int WINAPI safe_sendto(SOCKET s, const char * buf, int len, int flags, const sockaddr * to, int tolen)
 {
 	UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
-	if (enclaveId == 0)
-	{
-		initializeEnclave();
-	}
+
 	char* encryptBuf = (char*)malloc(len);
-	SendtoEncrypt(enclaveId, (char*)buf, encryptBuf, len);
+	sgx_SendtoEncrypt((char*)buf, encryptBuf, len);
 
 	int returnValue = sendto(s, encryptBuf, len, flags, to, tolen);
 
@@ -186,13 +146,10 @@ int WINAPI safe_sendto(SOCKET s, const char * buf, int len, int flags, const soc
 int WINAPI safe_recvfrom(SOCKET s, char * buf, int len, int flags, sockaddr * from, int * fromlen)
 {
 	UnHookFunction(HOOK_NET_MODULE, "recvfrom", recvfromHook);
-	if (enclaveId == 0)
-	{
-		initializeEnclave();
-	}
+
 	char* decryptBuf = (char*)malloc(len);
 	int returnValue = recvfrom(s, decryptBuf, len, flags, from, fromlen);
-	recvfromDecrypt(enclaveId, decryptBuf, buf, len);
+	sgx_recvfromDecrypt(decryptBuf, buf, len);
 	free(decryptBuf);
 	HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, recvfromHook);
 	return returnValue;
@@ -202,17 +159,13 @@ BOOL WINAPI safe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToR
 {
 	UnHookFunction(HOOK_FILE_MODULE, "ReadFile", readFileHook);
 
-	if (enclaveId == 0)
-	{
-		initializeEnclave();
-	}
 
 	BOOL returnValue;
 	if (std::find(fileHandles.begin(), fileHandles.end(), hFile) != fileHandles.end())
 	{
 		char * decryptBuf = (char*)malloc(nNumberOfBytesToRead);
 		returnValue = ReadFile(hFile, (LPVOID)decryptBuf, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
-		ReadFileDecrypt(enclaveId, decryptBuf, (char*)lpBuffer, nNumberOfBytesToRead);
+		sgx_ReadFileDecrypt(decryptBuf, (char*)lpBuffer, nNumberOfBytesToRead);
 		free(decryptBuf);
 		// printf("file read : %d\n", nNumberOfBytesToRead);
 	}

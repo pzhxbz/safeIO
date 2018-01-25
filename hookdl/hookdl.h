@@ -51,9 +51,6 @@ BOOL WINAPI safe_CloseHandle(HANDLE hObject);
 DWORD HookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID lpFunction, unsigned char *lpBackup);
 BOOL UnHookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, unsigned char *lpBackup);
 
-bool initializeEnclave();
-bool destroyEnclave();
-
 void initHook();
 void destoryHook();
 

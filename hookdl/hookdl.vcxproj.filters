@@ -36,6 +36,9 @@
     <ClInclude Include="safeIO_u.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
+    <ClInclude Include="sgx_process.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -49,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="safeIO_u.c">
       <Filter>Generated Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sgx_process.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

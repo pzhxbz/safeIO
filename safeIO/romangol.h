@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 #ifndef _ROMANGOL_H_
 #define _ROMANGOL_H_
 
