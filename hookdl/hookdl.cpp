@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <string>
 #include <fstream>
-
+#include <WS2tcpip.h>
 
 
 #pragma comment(lib, "ws2_32.lib")
@@ -48,6 +48,7 @@ bool initFileList()
 		fileDecryptList.push_back(std::string(filename));
 		printf_s("%s\n", filename);
 	}
+	return true;
 }
 
 
@@ -127,7 +128,59 @@ int WINAPI safe_recv(SOCKET s, char * buf, int len, int flags)
 
 	HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
 
+	free(decryptBuf);
+
 	return returnValue;
+}
+
+int unsafe_initSocket(int * s, char * ip, int port)
+{
+	unsigned int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+
+	if (sock == INVALID_SOCKET)
+	{
+		return -1;
+	}
+
+	sockaddr_in serAddr;
+	serAddr.sin_family = AF_INET;
+	serAddr.sin_addr.S_un.S_addr = inet_pton(AF_INET, ip, &serAddr);
+	serAddr.sin_port = htons(port);
+	if (connect(sock, (sockaddr*)&serAddr, sizeof(sockaddr_in)))
+	{
+		closesocket(sock);
+		return -1;
+	}
+
+	*s = sock;
+
+	return 0;
+}
+
+int unsafe_send(int s, const char * buf, int len, int flags)
+{
+	UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
+
+	int returnValue = send(s, buf, len, flags);
+
+	HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
+	return returnValue;
+}
+
+int unsafe_recv(int s, char * buf, int len, int flags)
+{
+	UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
+
+	int returnValue = recv(s, buf, len, flags);
+
+	HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
+
+	return returnValue;
+}
+
+int unsafe_closesocket(int s)
+{
+	return closesocket(s);
 }
 
 int WINAPI safe_sendto(SOCKET s, const char * buf, int len, int flags, const sockaddr * to, int tolen)
@@ -138,6 +191,8 @@ int WINAPI safe_sendto(SOCKET s, const char * buf, int len, int flags, const soc
 	sgx_SendtoEncrypt((char*)buf, encryptBuf, len);
 
 	int returnValue = sendto(s, encryptBuf, len, flags, to, tolen);
+
+	free(encryptBuf);
 
 	HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, sendtoHook);
 	return returnValue;
@@ -151,6 +206,26 @@ int WINAPI safe_recvfrom(SOCKET s, char * buf, int len, int flags, sockaddr * fr
 	int returnValue = recvfrom(s, decryptBuf, len, flags, from, fromlen);
 	sgx_recvfromDecrypt(decryptBuf, buf, len);
 	free(decryptBuf);
+	HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, recvfromHook);
+	return returnValue;
+}
+
+int unsafe_sendto(int s, const char * buf, int len, int flags, const sockaddr * to, int tolen)
+{
+	UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
+
+	int returnValue = sendto(s, buf, len, flags, to, tolen);
+
+	HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, sendtoHook);
+	return returnValue;
+}
+
+int unsafe_recvfrom(int s, char * buf, int len, int flags, sockaddr * from, int * fromlen)
+{
+	UnHookFunction(HOOK_NET_MODULE, "recvfrom", recvfromHook);
+
+	int returnValue = recvfrom(s, buf, len, flags, from, fromlen);
+
 	HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, recvfromHook);
 	return returnValue;
 }

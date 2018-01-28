@@ -14,14 +14,33 @@
 #include <Windows.h>
 #include <winsock2.h>
 #include "sgx_urts.h"
+//#include "safeIO_u.h"
 
 // tcp hook
 int WINAPI safe_send(SOCKET s, const char *buf, int len, int flags);
 int WINAPI safe_recv(SOCKET s, char* buf, int len, int flags);
 
+// no hook tcp
+extern "C"
+{
+	int unsafe_initSocket(int *socket, char* ip, int port);
+	int unsafe_send(int s, const char *buf, int len, int flags);
+	int unsafe_recv(int s, char* buf, int len, int flags);
+	int unsafe_closesocket(int s);
+}
+
+
 // udp hook
 int WINAPI safe_sendto(SOCKET s, const char *buf, int len, int flags, const struct sockaddr *to, int tolen);
 int WINAPI safe_recvfrom(SOCKET s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen);
+
+// no hook udp 
+extern "C"
+{
+	int unsafe_sendto(int s, const char *buf, int len, int flags, const struct sockaddr *to, int tolen);
+	int unsafe_recvfrom(int s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen);
+
+}
 
 
 

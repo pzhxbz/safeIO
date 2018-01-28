@@ -31,6 +31,11 @@ typedef struct ms_recvfromDecrypt_t {
 	size_t ms_len;
 } ms_recvfromDecrypt_t;
 
+typedef struct ms_initCheck_t {
+	char* ms_src;
+	size_t ms_len;
+} ms_initCheck_t;
+
 typedef struct ms_unsafe_send_t {
 	int ms_retval;
 	int ms_s;
@@ -243,6 +248,16 @@ sgx_status_t recvfromDecrypt(sgx_enclave_id_t eid, char* src, char* des, size_t 
 	ms.ms_des = des;
 	ms.ms_len = len;
 	status = sgx_ecall(eid, 4, &ocall_table_safeIO, &ms);
+	return status;
+}
+
+sgx_status_t initCheck(sgx_enclave_id_t eid, char* src, size_t len)
+{
+	sgx_status_t status;
+	ms_initCheck_t ms;
+	ms.ms_src = src;
+	ms.ms_len = len;
+	status = sgx_ecall(eid, 5, &ocall_table_safeIO, &ms);
 	return status;
 }
 

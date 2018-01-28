@@ -66,8 +66,12 @@ BOOL InjectDll(DWORD dwPID, LPCTSTR szDllPath)
 
 	ResumeThread(hProcess);
 	ResumeThread(hThread);  // start inject thread
-	//WaitForSingleObject(hThread, INFINITE);
-	Sleep(15);
+	WaitForSingleObject(hThread, INFINITE);
+
+	// todo 
+	// Sleep(15);
+	// todo
+
 	ResumeThread(processThread);  // start main thread
 	return TRUE;
 

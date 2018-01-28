@@ -145,11 +145,11 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <Optimization>Disabled</Optimization>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>$(SGXSDKInstallPath)include;$(SGXSDKInstallPath)include\tlibc;$(SGXSDKInstallPath)include\libc++;C:\boost_1_53_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SGXSDKInstallPath)include;C:\sgx_ssl\include;$(SGXSDKInstallPath)include\tlibc;$(SGXSDKInstallPath)include\libc++;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>sgx_trts.lib;sgx_tstdc.lib;sgx_tservice.lib;sgx_tcrypto.lib;sgx_tcxx.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SGXSDKInstallPath)bin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>sgx_trts.lib;sgx_tstdc.lib;sgx_tservice.lib;sgx_tcrypto.lib;sgx_tcxx.lib;libsgx_tsgxssl.lib;libsgx_tsgxssl_crypto.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>C:\sgx_ssl\lib\Win32\Debug;$(SGXSDKInstallPath)bin\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>true</IgnoreAllDefaultLibraries>
       <EntryPointSymbol />
       <NoEntryPoint>true</NoEntryPoint>
@@ -320,14 +320,18 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="init_check.cpp" />
     <ClCompile Include="safeIO.cpp" />
     <ClCompile Include="safeIO_t.c" />
+    <ClCompile Include="sm2.cpp" />
     <ClCompile Include="sm3.cpp" />
     <ClCompile Include="sm4.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="init_check.h" />
     <ClInclude Include="romangol.h" />
     <ClInclude Include="safeIO_t.h" />
+    <ClInclude Include="sm2.h" />
     <ClInclude Include="sm3.h" />
     <ClInclude Include="sm4.h" />
     <ClInclude Include="sm4.hpp" />
@@ -369,6 +373,7 @@
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Prerelease|x64'">safeIO.config.xml;%(AdditionalInputs)</AdditionalInputs>
     </CustomBuild>
     <None Include="safeIO_private.pem" />
+    <None Include="sgx_tsgxssl.edl" />
   </ItemGroup>
   <ItemGroup>
     <Xml Include="safeIO.config.xml" />

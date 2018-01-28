@@ -14,10 +14,10 @@
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Generated Files">
-      <UniqueIdentifier>{2577d1be-58c2-4a73-968d-5d744499ae3f}</UniqueIdentifier>
+      <UniqueIdentifier>{23428f8c-b72a-4d31-ba8e-3ed5d77958c2}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files">
-      <UniqueIdentifier>{8df5bb62-ddb6-480e-9162-52b5ce86831c}</UniqueIdentifier>
+      <UniqueIdentifier>{2845aa73-9f18-4901-bae0-b4b0e9d13aec}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -30,16 +30,10 @@
     <ClInclude Include="targetver.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="hookdl.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="safeIO_u.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="sgx_process.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="sgx_untrusted.h">
+    <ClInclude Include="test_untrusted.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
@@ -47,19 +41,13 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="hookdl.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="sgxtest.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="safeIO_u.c">
       <Filter>Generated Files</Filter>
     </ClCompile>
-    <ClCompile Include="sgx_process.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="sgx_untrusted.cpp">
+    <ClCompile Include="test_untrusted.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

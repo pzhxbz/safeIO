@@ -28,6 +28,12 @@
     <Filter Include="Source Files\sm4">
       <UniqueIdentifier>{14b8bc7b-664b-413a-8e67-95e3f75d4a68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sm2">
+      <UniqueIdentifier>{0192d03d-8896-4d43-a1b4-f13039c6b515}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sm2">
+      <UniqueIdentifier>{18bfe6d7-e3c2-4949-8d76-a3d6636d9858}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="safeIO_t.c">
@@ -41,6 +47,12 @@
     </ClCompile>
     <ClCompile Include="sm4.cpp">
       <Filter>Source Files\sm4</Filter>
+    </ClCompile>
+    <ClCompile Include="init_check.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sm2.cpp">
+      <Filter>Source Files\sm2</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -62,10 +74,19 @@
     <ClInclude Include="sm4.hpp">
       <Filter>Header Files\sm4</Filter>
     </ClInclude>
+    <ClInclude Include="init_check.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="sm2.h">
+      <Filter>Header Files\sm2</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="safeIO_private.pem">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="sgx_tsgxssl.edl">
+      <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

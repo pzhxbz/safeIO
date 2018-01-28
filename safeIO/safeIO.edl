@@ -1,6 +1,6 @@
 enclave {
-    from "sgx_tstdc.edl" import *;
-
+   
+	from "sgx_tsgxssl.edl" import *; 
     trusted {
         /* define ECALLs here. */
 		public void sendEncrypt([in,size=len]char* src,[out,size=len] char* des, size_t len);
@@ -8,10 +8,15 @@ enclave {
 		public void ReadFileDecrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
 		public void SendtoEncrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
 		public void recvfromDecrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
+		public void initCheck([in,size=len]char * src, size_t len);
     };
 
     untrusted {
         /* define OCALLs here. */
+		int unsafe_send(int s, [in,size=len]char *buf, int len, int flags);
+		int unsafe_recv(int s, [out,size=len]char* buf, int len, int flags);
+		int unsafe_initSocket([out]int *socket,[string,in] char* ip, int port);
+		int unsafe_closesocket(int s);
 
     };
 };

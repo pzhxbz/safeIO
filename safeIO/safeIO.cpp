@@ -4,6 +4,8 @@
 
 #include "sm3.h"
 #include "sm4.h"
+#include "init_check.h"
+
 
 void sendEncrypt(char* src, char* des, size_t len)
 {
@@ -11,6 +13,7 @@ void sendEncrypt(char* src, char* des, size_t len)
 	{
 		des[i] = src[i] ^ 0xde;
 	}
+
 }
 
 void recvDecrypt(char* src, char* des, size_t len)
