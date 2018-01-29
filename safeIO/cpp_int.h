@@ -11,10 +11,11 @@ public:
 	cpp_int(char*);
 	cpp_int(BIGNUM*);
 	cpp_int(int);
+	cpp_int(const cpp_int&);
 	static cpp_int FromUint8(uint8_t*, size_t);
 	static cpp_int FromDec(char* number);
 
-	static void ToUint8(cpp_int, uint8_t*);
+	friend void ToUint8(cpp_int, uint8_t*);
 
 	friend cpp_int inv_mod(cpp_int a, cpp_int b);
 	friend cpp_int mod(cpp_int a, cpp_int b);

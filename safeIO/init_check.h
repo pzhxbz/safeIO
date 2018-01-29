@@ -21,6 +21,7 @@ struct ServerHello
 	int magic;
 	uint8_t aesKey[AES_KEY_LENGTH];
 	int isVerify;
+	int token;
 };
 
 extern "C" void initCheck(char* src, size_t len);

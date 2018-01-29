@@ -9,6 +9,10 @@ enclave {
 		public void SendtoEncrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
 		public void recvfromDecrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
 		public void initCheck([in,size=len]char * src, size_t len);
+
+
+
+		public void cpp_int_test();
     };
 
     untrusted {

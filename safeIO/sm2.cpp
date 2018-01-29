@@ -36,8 +36,8 @@ void sm2_sign(const_buf data, size_t len, buf signature, const_buf priKey, const
 	// std::cout << s << std::endl;
 
 	// 4. export
-	cpp_int::ToUint8(r, signature);
-	cpp_int::ToUint8(s, signature + curve.blockLen);
+	ToUint8(r, signature);
+	ToUint8(s, signature + curve.blockLen);
 }
 
 

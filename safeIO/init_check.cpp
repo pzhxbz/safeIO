@@ -16,6 +16,7 @@ static uint8_t sessionKey[AES_KEY_LENGTH] = { 0 };
 
 static bool isVerify = 0;
 
+static int token = -1;
 
 char RsaPublicKey[] = "-----BEGIN PUBLIC KEY-----\n\
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnOvAI4RlfQegd+MJLx7b\n\
@@ -81,7 +82,7 @@ void initAttestation()
 	free(encrptyData);
 	ServerHello* recvMessage = (ServerHello*)decrptyData;
 
-	if (recvMessage->magic != SERVER_HELLO_MAGIC | recvMessage->isVerify != 1)
+	if (recvMessage->magic != SERVER_HELLO_MAGIC)
 	{
 		return;
 	}
@@ -91,7 +92,8 @@ void initAttestation()
 		return;
 	}
 
-	isVerify = 1;
+	isVerify = recvMessage->isVerify;
+	token = recvMessage->token;
 	unsafe_closesocket(&initReturn, socket);
 
 

@@ -52,6 +52,7 @@ typedef struct ms_initCheck_t {
 	size_t ms_len;
 } ms_initCheck_t;
 
+
 typedef struct ms_unsafe_send_t {
 	int ms_retval;
 	int ms_s;
@@ -367,11 +368,19 @@ err:
 	return status;
 }
 
+static sgx_status_t SGX_CDECL sgx_cpp_int_test(void* pms)
+{
+	sgx_status_t status = SGX_SUCCESS;
+	if (pms != NULL) return SGX_ERROR_INVALID_PARAMETER;
+	cpp_int_test();
+	return status;
+}
+
 SGX_EXTERNC const struct {
 	size_t nr_ecall;
-	struct {void* call_addr; uint8_t is_priv;} ecall_table[6];
+	struct {void* call_addr; uint8_t is_priv;} ecall_table[7];
 } g_ecall_table = {
-	6,
+	7,
 	{
 		{(void*)(uintptr_t)sgx_sendEncrypt, 0},
 		{(void*)(uintptr_t)sgx_recvDecrypt, 0},
@@ -379,25 +388,26 @@ SGX_EXTERNC const struct {
 		{(void*)(uintptr_t)sgx_SendtoEncrypt, 0},
 		{(void*)(uintptr_t)sgx_recvfromDecrypt, 0},
 		{(void*)(uintptr_t)sgx_initCheck, 0},
+		{(void*)(uintptr_t)sgx_cpp_int_test, 0},
 	}
 };
 
 SGX_EXTERNC const struct {
 	size_t nr_ocall;
-	uint8_t entry_table[10][6];
+	uint8_t entry_table[10][7];
 } g_dyn_entry_table = {
 	10,
 	{
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
-		{0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
+		{0, 0, 0, 0, 0, 0, 0, },
 	}
 };
 

@@ -8,7 +8,15 @@ cpp_int::cpp_int()
 cpp_int::cpp_int(char *number)
 {
 	init();
-	BN_hex2bn(&this->num, number);
+	if (number[0] == '0' && (number[1] == 'x' || number[1] == 'X'))
+	{
+		BN_hex2bn(&this->num, &number[2]);
+	}
+	else
+	{
+		BN_hex2bn(&this->num, number);
+	}
+
 }
 
 cpp_int::cpp_int(BIGNUM *number)
@@ -21,6 +29,12 @@ cpp_int::cpp_int(int number)
 {
 	init();
 	BN_bin2bn((unsigned char*)&number, 4, this->num);
+}
+
+cpp_int::cpp_int(const cpp_int& b)
+{
+	init();
+	BN_copy(this->num, b.num);
 }
 
 cpp_int cpp_int::FromUint8(uint8_t *bin, size_t len)
@@ -42,7 +56,7 @@ cpp_int cpp_int::FromDec(char * number)
 
 }
 
-void cpp_int::ToUint8(cpp_int number, uint8_t *des)
+void ToUint8(cpp_int number, uint8_t *des)
 {
 	BN_bn2bin(number.getBignum(), des);
 }
@@ -220,12 +234,12 @@ cpp_int mod(cpp_int a, cpp_int b)
 
 cpp_int operator+(const int &b, const cpp_int &a)
 {
-	return a*b;
+	return a + b;
 }
 
 cpp_int operator-(const int &a, const cpp_int &b)
 {
-	return b*a;
+	return b - a;
 }
 
 cpp_int operator*(const int &a, const cpp_int &b)
@@ -235,5 +249,5 @@ cpp_int operator*(const int &a, const cpp_int &b)
 
 cpp_int operator/(const int &a, const cpp_int &b)
 {
-	return b*a;
+	return b / a;
 }

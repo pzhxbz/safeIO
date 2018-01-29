@@ -52,7 +52,7 @@ int main()
 	initializeEnclave();
 
 	initCheck(enclaveId, test, strlen(test));
-
+	//cpp_int_test(enclaveId);
 	destroyEnclave();
 	return 0;
 }

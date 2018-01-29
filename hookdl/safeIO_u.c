@@ -36,6 +36,7 @@ typedef struct ms_initCheck_t {
 	size_t ms_len;
 } ms_initCheck_t;
 
+
 typedef struct ms_unsafe_send_t {
 	int ms_retval;
 	int ms_s;
@@ -258,6 +259,13 @@ sgx_status_t initCheck(sgx_enclave_id_t eid, char* src, size_t len)
 	ms.ms_src = src;
 	ms.ms_len = len;
 	status = sgx_ecall(eid, 5, &ocall_table_safeIO, &ms);
+	return status;
+}
+
+sgx_status_t cpp_int_test(sgx_enclave_id_t eid)
+{
+	sgx_status_t status;
+	status = sgx_ecall(eid, 6, &ocall_table_safeIO, NULL);
 	return status;
 }
 

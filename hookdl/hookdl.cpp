@@ -133,8 +133,18 @@ int WINAPI safe_recv(SOCKET s, char * buf, int len, int flags)
 	return returnValue;
 }
 
+
 int unsafe_initSocket(int * s, char * ip, int port)
 {
+
+	WORD sockVersion = MAKEWORD(2, 2);
+
+	WSADATA data;
+	if (WSAStartup(sockVersion, &data) != 0)
+	{
+		return -1;
+	}
+
 	unsigned int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 	if (sock == INVALID_SOCKET)
@@ -144,9 +154,11 @@ int unsafe_initSocket(int * s, char * ip, int port)
 
 	sockaddr_in serAddr;
 	serAddr.sin_family = AF_INET;
-	serAddr.sin_addr.S_un.S_addr = inet_pton(AF_INET, ip, &serAddr);
+	//inet_pton(AF_INET, ip, &serAddr.sin_addr);
+	serAddr.sin_addr.S_un.S_addr = inet_addr(ip);
+
 	serAddr.sin_port = htons(port);
-	if (connect(sock, (sockaddr*)&serAddr, sizeof(sockaddr_in)))
+	if (connect(sock, (sockaddr*)&serAddr, sizeof(sockaddr_in)) == SOCKET_ERROR)
 	{
 		closesocket(sock);
 		return -1;
