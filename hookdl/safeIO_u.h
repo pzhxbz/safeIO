@@ -30,6 +30,7 @@ sgx_status_t recvDecrypt(sgx_enclave_id_t eid, char* src, char* des, size_t len)
 sgx_status_t ReadFileDecrypt(sgx_enclave_id_t eid, char* src, char* des, size_t len);
 sgx_status_t SendtoEncrypt(sgx_enclave_id_t eid, char* src, char* des, size_t len);
 sgx_status_t recvfromDecrypt(sgx_enclave_id_t eid, char* src, char* des, size_t len);
+sgx_status_t initCheck(sgx_enclave_id_t eid, char* src, size_t len);
 
 #ifdef __cplusplus
 }

@@ -320,6 +320,8 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="cpp_int.cpp" />
+    <ClCompile Include="ecc.cpp" />
     <ClCompile Include="init_check.cpp" />
     <ClCompile Include="safeIO.cpp" />
     <ClCompile Include="safeIO_t.c" />
@@ -328,6 +330,8 @@
     <ClCompile Include="sm4.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cpp_int.h" />
+    <ClInclude Include="ecc.h" />
     <ClInclude Include="init_check.h" />
     <ClInclude Include="romangol.h" />
     <ClInclude Include="safeIO_t.h" />
