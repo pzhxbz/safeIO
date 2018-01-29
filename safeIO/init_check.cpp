@@ -1,6 +1,7 @@
 
 #include "init_check.h"
 #include <stdlib.h>
+#include <string.h>
 #include <sgx_trts.h>
 #include <windows.h>
 #include <openssl/rsa.h>
@@ -8,10 +9,10 @@
 #include <openssl/err.h>
 #include <openssl/bn.h>
 #include "safeIO_t.h"
+#include "sm4.h"
+static uint8_t sm3Hash[SM3_DIGEST_LENGTH] = { 0 };
 
-uint8_t sm3Hash[SM3_DIGEST_LENGTH] = { 0 };
-
-uint8_t sessionKey[AES_KEY_LENGTH] = { 0 };
+static uint8_t sessionKey[AES_KEY_LENGTH] = { 0 };
 
 static bool isVerify = 0;
 
@@ -72,7 +73,25 @@ void initAttestation()
 	unsafe_send(&initReturn, socket, (char*)encrptyData, enLen, 0);
 	memset(encrptyData, 0, enLen);
 	unsafe_recv(&initReturn, socket, (char*)encrptyData, 256, 0);
+	unsigned char* decrptyData = (unsigned char*)malloc(rsaSize);
+	//RSA_public_decrypt(rsaSize, encrptyData, decrptyData, rsa, RSA_PKCS1_PADDING);
 
+	sm4_decrypt_ecb(encrptyData, initReturn, decrptyData, sessionKey);
+
+	free(encrptyData);
+	ServerHello* recvMessage = (ServerHello*)decrptyData;
+
+	if (recvMessage->magic != SERVER_HELLO_MAGIC | recvMessage->isVerify != 1)
+	{
+		return;
+	}
+
+	if (memcmp(recvMessage->aesKey, sessionKey, AES_KEY_LENGTH) != 0)
+	{
+		return;
+	}
+
+	isVerify = 1;
 	unsafe_closesocket(&initReturn, socket);
 
 
