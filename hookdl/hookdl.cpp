@@ -93,6 +93,22 @@ int checkSendHooked()
 	}
 	return 1;
 }
+int checkReadFileHooked()
+{
+	DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(HOOK_FILE_MODULE), "ReadFile");
+	if (dwAddr == 0)
+	{
+		printf_s("can't chk readfile hook\n");
+		return 1;
+	}
+	BYTE tmp[6] = { 0 };
+	ReadProcessMemory(GetCurrentProcess(), (LPVOID)dwAddr, tmp, 6, 0);
+	if (memcmp(tmp, readFileHook, 6) == 0)
+	{
+		return 0;
+	}
+	return 1;
+}
 
 DWORD HookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID lpFunction, unsigned char *lpBackup)
 {
@@ -277,11 +293,14 @@ BOOL WINAPI safe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToR
 	BOOL returnValue;
 	if (std::find(fileHandles.begin(), fileHandles.end(), hFile) != fileHandles.end())
 	{
+		// printf("file read %x: %d\n", hFile, nNumberOfBytesToRead);
 		char * decryptBuf = (char*)malloc(nNumberOfBytesToRead);
 		returnValue = ReadFile(hFile, (LPVOID)decryptBuf, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 		sgx_ReadFileDecrypt(decryptBuf, (char*)lpBuffer, nNumberOfBytesToRead);
+		// printf("%s\n", decryptBuf);
+		// Sleep(5000);
 		free(decryptBuf);
-		// printf("file read : %d\n", nNumberOfBytesToRead);
+
 	}
 	else
 	{
@@ -373,6 +392,11 @@ HANDLE  unsafe_CreateFile(
 
 BOOL  unsafe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
 {
+	int isHooked = checkReadFileHooked();
+	if (!isHooked)
+	{
+		return ReadFile(hFile, (LPVOID)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);;
+	}
 	UnHookFunction(HOOK_FILE_MODULE, "ReadFile", readFileHook);
 
 
