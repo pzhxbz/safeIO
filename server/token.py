@@ -1,19 +1,29 @@
 
-
-token_list = {}
+class Token:
+    token_list = {}
+    def __init__(self):
+        pass
 
 MAX_CLIENT = 65535
 
 def add_key(key):
     for i in xrange(0,MAX_CLIENT):
-        if not token_list.has_key(str(i)):
-            token_list[str(i)] = key
-            return str(i)
+        if not Token.token_list.has_key(str(i)):
+            Token.token_list[str(i)] = key
+            return i
 
     return None
 
 def get_key(token):
-    return token_list[token]
+    try:
+        return Token.token_list[token]
+    except Exception:
+        return None
+
+   
 
 def del_token(token):
-    token_list.pop(token)
+    try:
+        Token.token_list.pop(token)
+    except Exception:
+        return

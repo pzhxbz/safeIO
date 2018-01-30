@@ -10,7 +10,7 @@
 #include <algorithm>
 #include <string>
 #include <fstream>
-#include <WS2tcpip.h>
+#include "safeIO_u.h"
 
 
 #pragma comment(lib, "ws2_32.lib")
@@ -77,6 +77,23 @@ void destoryHook()
 }
 
 
+int checkSendHooked()
+{
+	DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(HOOK_NET_MODULE), "send");
+	if (dwAddr == 0)
+	{
+		printf_s("can't chk send hook\n");
+		return 1;
+	}
+	BYTE tmp[6] = { 0 };
+	ReadProcessMemory(GetCurrentProcess(), (LPVOID)dwAddr, tmp, 6, 0);
+	if (memcmp(tmp, sendHook, 6) == 0)
+	{
+		return 0;
+	}
+	return 1;
+}
+
 DWORD HookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID lpFunction, unsigned char *lpBackup)
 {
 	DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(lpModule), lpFuncName);
@@ -102,15 +119,20 @@ BOOL UnHookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, unsigned char *lpBackup
 	return FALSE;
 }
 
+
+#define  SM4_BLOCK_SIZE 16
 int WINAPI safe_send(SOCKET s, const char * buf, int len, int flags)
 {
+
 	UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
 
-	char* encryptBuf = (char*)malloc(len);
+	size_t realLength = len % SM4_BLOCK_SIZE == 0 ? len + 4 : \
+		(len / SM4_BLOCK_SIZE) * SM4_BLOCK_SIZE + 4 + SM4_BLOCK_SIZE; // i don't think it's can easily understand
+	char* encryptBuf = (char*)malloc(realLength);
 
 	sgx_sendEncrypt((char*)buf, encryptBuf, len);
 
-	int returnValue = send(s, encryptBuf, len, flags);
+	int returnValue = send(s, encryptBuf, realLength, flags);
 	free(encryptBuf);
 	HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
 	return returnValue;
@@ -134,7 +156,7 @@ int WINAPI safe_recv(SOCKET s, char * buf, int len, int flags)
 }
 
 
-int unsafe_initSocket(int * s, char * ip, int port)
+extern "C" int unsafe_initSocket(int * s, char * ip, int port)
 {
 
 	WORD sockVersion = MAKEWORD(2, 2);
@@ -169,8 +191,13 @@ int unsafe_initSocket(int * s, char * ip, int port)
 	return 0;
 }
 
-int unsafe_send(int s, const char * buf, int len, int flags)
+extern "C" int unsafe_send(int s, char * buf, int len, int flags)
 {
+	int isHooked = checkSendHooked();
+	if (!isHooked)
+	{
+		return send(s, buf, len, flags);
+	}
 	UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
 
 	int returnValue = send(s, buf, len, flags);
@@ -179,7 +206,7 @@ int unsafe_send(int s, const char * buf, int len, int flags)
 	return returnValue;
 }
 
-int unsafe_recv(int s, char * buf, int len, int flags)
+extern "C" int unsafe_recv(int s, char * buf, int len, int flags)
 {
 	UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
 
@@ -190,7 +217,7 @@ int unsafe_recv(int s, char * buf, int len, int flags)
 	return returnValue;
 }
 
-int unsafe_closesocket(int s)
+extern "C" int unsafe_closesocket(int s)
 {
 	return closesocket(s);
 }
@@ -222,7 +249,7 @@ int WINAPI safe_recvfrom(SOCKET s, char * buf, int len, int flags, sockaddr * fr
 	return returnValue;
 }
 
-int unsafe_sendto(int s, const char * buf, int len, int flags, const sockaddr * to, int tolen)
+extern "C" int unsafe_sendto(int s, char * buf, int len, int flags, const sockaddr * to, int tolen)
 {
 	UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
 
@@ -232,7 +259,7 @@ int unsafe_sendto(int s, const char * buf, int len, int flags, const sockaddr * 
 	return returnValue;
 }
 
-int unsafe_recvfrom(int s, char * buf, int len, int flags, sockaddr * from, int * fromlen)
+extern "C" int unsafe_recvfrom(int s, char * buf, int len, int flags, sockaddr * from, int * fromlen)
 {
 	UnHookFunction(HOOK_NET_MODULE, "recvfrom", recvfromHook);
 
@@ -325,3 +352,45 @@ BOOL WINAPI safe_CloseHandle(HANDLE hObject)
 	return returnValue;
 }
 
+
+
+
+HANDLE  unsafe_CreateFile(
+	LPCTSTR               lpFileName,
+	DWORD                 dwDesiredAccess,
+	DWORD                 dwShareMode,
+	LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+	DWORD                 dwCreationDisposition,
+	DWORD                 dwFlagsAndAttributes,
+	HANDLE                hTemplateFile
+)
+{
+	UnHookFunction(HOOK_FILE_MODULE, "CreateFileW", createFileHook);
+	HANDLE returnValue = CreateFile(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+	HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, createFileHook);
+	return returnValue;
+}
+
+BOOL  unsafe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
+{
+	UnHookFunction(HOOK_FILE_MODULE, "ReadFile", readFileHook);
+
+
+	BOOL returnValue;
+
+	returnValue = ReadFile(hFile, (LPVOID)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+
+	HookFunction(HOOK_FILE_MODULE, "ReadFile", (LPVOID)safe_ReadFile, readFileHook);
+	return returnValue;
+}
+
+
+BOOL unsafe_CloseHandle(HANDLE hObject)
+{
+	UnHookFunction(HOOK_FILE_MODULE, "CloseHandle", closeHandleHook);
+
+	BOOL returnValue = CloseHandle(hObject);
+
+	HookFunction(HOOK_FILE_MODULE, "CloseHandle", (LPVOID)safe_CloseHandle, closeHandleHook);
+	return returnValue;
+}

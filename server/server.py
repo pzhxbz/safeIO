@@ -3,9 +3,9 @@ import socket
 import struct
 import pysm4
 import base64
-import threading
+import thread
 from token import add_key
-
+from portforward import portmap
 
 
 CLIENT_HELLO_MAGIC = 0x23333333
@@ -17,8 +17,12 @@ TOKEN_FULL = 2
 def str2hex(data):
     res = ''
     for i in data:
-        res += hex(ord(i))
+        res += hex(ord(i)).replace('0x','')
     return res
+
+def start_portforward():
+    portforward = portmap(9999,"127.0.0.1",6787)
+    portforward.run()
 
 HOST = '127.0.0.1'
 PORT = 6786
@@ -31,9 +35,10 @@ prikey = rsa.PrivateKey.load_pkcs1(rsakey)
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind((HOST, PORT))
-s.listen(5)
-print('Server start at: %s:%s' % (HOST, PORT))
-print('wait for connection...')
+
+
+# threading.Thread(target=start_portforward).run()
+thread.start_new_thread(start_portforward, ())
 
 def verify_client(conn, addr):
     data = conn.recv(1024)
@@ -60,10 +65,18 @@ def verify_client(conn, addr):
         message = struct.pack('i',0x66666666) + de[4:20] + struct.pack('i',VERIFY_SUCESS) + struct.pack('i',send_token)
         print(send_token)
     conn.send(pysm4.encrypt_ecb(message,de[4:20]))
+    conn.close()
 
-
+print('Server start at: %s:%s' % (HOST, PORT))
+print('wait for connection...')
+s.settimeout(5)
 while True:
-    conn, addr = s.accept()
+    s.listen(5)
+    try:
+        conn, addr = s.accept()
+    except socket.timeout:
+        continue
     print('Connected by ', addr)
     
-    threading.Thread(target=verify_client, args=(conn,addr,)).start()
+    #threading.Thread(target=verify_client, args=(conn,addr,)).start()
+    thread.start_new_thread(verify_client,(conn,addr,))

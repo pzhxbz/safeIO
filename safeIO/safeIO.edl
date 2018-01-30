@@ -3,7 +3,9 @@ enclave {
 	from "sgx_tsgxssl.edl" import *; 
     trusted {
         /* define ECALLs here. */
-		public void sendEncrypt([in,size=len]char* src,[out,size=len] char* des, size_t len);
+		public void sendEncrypt([in,size=len]char* src,[user_check] char* des, size_t len);
+
+
 		public void recvDecrypt([in,size=len]char* src,[out,size=len]char* des, size_t len);
 		public void ReadFileDecrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
 		public void SendtoEncrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);

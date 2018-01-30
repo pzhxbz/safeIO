@@ -14,7 +14,7 @@ static uint8_t sm3Hash[SM3_DIGEST_LENGTH] = { 0 };
 
 static uint8_t sessionKey[AES_KEY_LENGTH] = { 0 };
 
-static bool isVerify = 0;
+static int isVerify = 0;
 
 static int token = -1;
 
@@ -61,6 +61,7 @@ void initAttestation()
 	if (enLen < 0)
 	{
 		// failed
+		free(encrptyData);
 		return;
 	}
 	int initReturn;
@@ -68,6 +69,7 @@ void initAttestation()
 	unsafe_initSocket(&initReturn, &socket, "127.0.0.1", 6786);
 	if (socket <= 0)
 	{
+		free(encrptyData);
 		return;
 		// create socket failed
 	}
@@ -84,11 +86,13 @@ void initAttestation()
 
 	if (recvMessage->magic != SERVER_HELLO_MAGIC)
 	{
+		free(decrptyData);
 		return;
 	}
 
 	if (memcmp(recvMessage->aesKey, sessionKey, AES_KEY_LENGTH) != 0)
 	{
+		free(decrptyData);
 		return;
 	}
 
@@ -108,3 +112,16 @@ void initCheck(char * src, size_t len)
 }
 
 
+unsigned char* getKey()
+{
+	return sessionKey;
+}
+
+int getToken()
+{
+	return token;
+}
+int getVerify()
+{
+	return isVerify;
+}

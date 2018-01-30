@@ -4,6 +4,7 @@
 #include "sgx_urts.h"
 #include "sgx_uae_service.h"
 #include <iostream>
+#include "hookdl.h"
 
 int query_sgx_status();
 
@@ -16,3 +17,5 @@ void sgx_recvDecrypt(char* src, char* des, size_t len);
 void sgx_ReadFileDecrypt(char* src, char* des, size_t len);
 void sgx_SendtoEncrypt(char* src, char* des, size_t len);
 void sgx_recvfromDecrypt(char* src, char* des, size_t len);
+
+int checkInit();

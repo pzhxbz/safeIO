@@ -35,7 +35,7 @@ else:
 
 E_FMT = 'UTF8'
 
-# SºĞ
+# S??
 S_BOX = {
     0X00: 0XD6, 0X01: 0X90, 0X02: 0XE9, 0X03: 0XFE, 0X04: 0XCC, 0X05: 0XE1, 0X06: 0X3D, 0X07: 0XB7,
     0X08: 0X16, 0X09: 0XB6, 0X0A: 0X14, 0X0B: 0XC2, 0X0C: 0X28, 0X0D: 0XFB, 0X0E: 0X2C, 0X0F: 0X05,
@@ -71,10 +71,10 @@ S_BOX = {
     0XF8: 0X79, 0XF9: 0XEE, 0XFA: 0X5F, 0XFB: 0X3E, 0XFC: 0XD7, 0XFD: 0XCB, 0XFE: 0X39, 0XFF: 0X48
 }
 
-# ÏµÍ³²ÎÊıFK
+# ÏµÍ³????FK
 FK = (0XA3B1BAC6, 0X56AA3350, 0X677D9197, 0XB27022DC)
 
-# ¹Ì¶¨²ÎÊıCK
+# ?Ì¶?????CK
 CK = (0X00070E15, 0X1C232A31, 0X383F464D, 0X545B6269,
       0X70777E85, 0X8C939AA1, 0XA8AFB6BD, 0XC4CBD2D9,
       0XE0E7EEF5, 0XFC030A11, 0X181F262D, 0X343B4249,
@@ -84,25 +84,25 @@ CK = (0X00070E15, 0X1C232A31, 0X383F464D, 0X545B6269,
       0XA0A7AEB5, 0XBCC3CAD1, 0XD8DFE6ED, 0XF4FB0209,
       0X10171E25, 0X2C333A41, 0X484F565D, 0X646B7279)
 
-# ÂÖÃÜÔ¿»º´æ
+# ????Ô¿????
 _rk_cache = {}
 
-# ¼ÓÃÜ
+# ????
 SM4_ENCRYPT = 1
-# ½âÃÜ
+# ????
 SM4_DECRYPT = 0
-# ·Ö×ébyteÊı
+# ????byte??
 BLOCK_BYTE = 16
 BLOCK_HEX = BLOCK_BYTE * 2
 
 
 def num2hex(num, width=1):
     """
-    ÕûÊı×ªÎªÖ¸¶¨³¤¶ÈµÄÊ®Áù½øÖÆ×Ö·û´®£¬²»×ã²¹0
+    ????×ªÎªÖ¸?????Èµ?Ê®???????Ö·????????ã²¹0
     >>> num2hex(1000, width=4)
     '03e8'
-    :param num: ÕûÊı
-    :param width: 16½øÖÆ×Ö·û´®³¤¶È£¬ Ä¬ÈÏÎª1
+    :param num: ????
+    :param width: 16?????Ö·??????È£? Ä¬??Îª1
     :return str
     """
     return '{:0>{width}}'.format(hex(num)[2:].replace('L', ''),
@@ -110,9 +110,9 @@ def num2hex(num, width=1):
 
 
 def _byte_unpack(num, byte_n=4):
-    # ·Ö½âºóÔª×é³¤¶È
+    # ?Ö½???Ôª?é³¤??
     _len = 4
-    # ²½³¤
+    # ????
     step = (byte_n // _len) * 2
     hex_str = num2hex(num=num, width=byte_n * 2)
     split_v = list(_range(len(hex_str)))[::step] + [len(hex_str)]
@@ -122,7 +122,7 @@ def _byte_unpack(num, byte_n=4):
 
 def _byte_pack(byte_array, byte_n=4):
     _len = 4
-    # byte_arrayÃ¿Ò»Ïî16½øÖÆ×Ö·û´®µÄ³¤¶È
+    # byte_arrayÃ¿Ò»??16?????Ö·????Ä³???
     width = (byte_n // _len) * 2
     if len(byte_array) != _len:
         raise ValueError('byte_array length must be 4.')
@@ -136,7 +136,7 @@ def _s_box(byte):
 
 def _non_linear_map(byte_array):
     """
-    ·ÇÏßĞÔ±ä»», ÊäÈëA=(a0, a1, a2, a3)
+    ?????Ô±ä»», ????A=(a0, a1, a2, a3)
     (b0, b1, b2, b3) = (Sbox(a0), Sbox(a1), Sbox(a2), Sbox(a3))
     """
     return (_s_box(byte_array[0]), _s_box(byte_array[1]),
@@ -145,8 +145,8 @@ def _non_linear_map(byte_array):
 
 def _linear_map(byte4):
     """
-    ÏßĞÔ±ä»»L
-    L(B) = B ¨’ (B <<< 2) ¨’ (B <<< 10) ¨’ (B <<< 18) ¨’ (B <<< 24)
+    ???Ô±ä»»L
+    L(B) = B ?? (B <<< 2) ?? (B <<< 10) ?? (B <<< 18) ?? (B <<< 24)
     """
     _left = loop_left_shift
     return byte4 ^ _left(byte4, 2) ^ _left(byte4, 10) ^ _left(byte4, 18) ^ _left(byte4, 24)
@@ -154,8 +154,8 @@ def _linear_map(byte4):
 
 def _linear_map_s(byte4):
     """
-    ÏßĞÔ±ä»»L'
-    L'(B) = B ¨’ (B <<< 13) ¨’ (B <<< 23)
+    ???Ô±ä»»L'
+    L'(B) = B ?? (B <<< 13) ?? (B <<< 23)
     """
     _left = loop_left_shift
     return byte4 ^ _left(byte4, 13) ^ _left(byte4, 23)
@@ -163,7 +163,7 @@ def _linear_map_s(byte4):
 
 def loop_left_shift(num, offset, base=32):
     """
-    Ñ­»·Ïò×óÒÆÎ»
+    Ñ­????????Î»
     >>> loop_left_shift(0b11010000, 3, base=8)
     >>> 0b10000110
     """
@@ -173,35 +173,35 @@ def loop_left_shift(num, offset, base=32):
 
 
 def _rep_t(byte4):
-    """ºÏ³ÉÖÃ»»T, ÓÉ·ÇÏßĞÔ±ä»»ºÍÏßĞÔ±ä»»L¸´ºÏ¶ø³É"""
-    # ·ÇÏßĞÔ±ä»»
+    """?Ï³??Ã»?T, ?É·????Ô±ä»»?????Ô±ä»»L???Ï¶???"""
+    # ?????Ô±ä»»
     b_array = _non_linear_map(_byte_unpack(byte4))
-    # ÏßĞÔ±ä»»L
+    # ???Ô±ä»»L
     return _linear_map(_byte_pack(b_array))
 
 
 def _rep_t_s(byte4):
     """
-    ºÏ³ÉÖÃ»»T', ÓÉ·ÇÏßĞÔ±ä»»ºÍÏßĞÔ±ä»»L'¸´ºÏ¶ø³É
+    ?Ï³??Ã»?T', ?É·????Ô±ä»»?????Ô±ä»»L'???Ï¶???
     """
-    # ·ÇÏßĞÔ±ä»»
+    # ?????Ô±ä»»
     b_array = _non_linear_map(_byte_unpack(byte4))
-    # ÏßĞÔ±ä»»L'
+    # ???Ô±ä»»L'
     return _linear_map_s(_byte_pack(b_array))
 
 
 def _round_keys(mk):
     """
-    ÂÖÃÜÔ¿ÓÉ¼ÓÃÜÃÜÔ¿Í¨¹ıÃÜÔ¿À©Õ¹Ëã·¨Éú³É
-    ¼ÓÃÜÃÜÔ¿MK = (MK0, MK1, MK2, MK3)
-    ÂÖÃÜÔ¿Éú³ÉËã·¨:
-    (K0, K1, K2, K3) = (MK0 ¨’ FK0, MK1 ¨’ FK1, MK2 ¨’ FK2, MK3 ¨’ FK3)
-    rki = Ki+4 = Ki¨’T'(Ki+1 ¨’ Ki+2 ¨’ Ki+3 ¨’ CKi) i=0, 1,...,31
-    :param mk: ¼ÓÃÜÃÜÔ¿, 16byte, 128bit
+    ????Ô¿?É¼?????Ô¿Í¨????Ô¿??Õ¹?ã·¨????
+    ??????Ô¿MK = (MK0, MK1, MK2, MK3)
+    ????Ô¿?????ã·¨:
+    (K0, K1, K2, K3) = (MK0 ?? FK0, MK1 ?? FK1, MK2 ?? FK2, MK3 ?? FK3)
+    rki = Ki+4 = Ki??T'(Ki+1 ?? Ki+2 ?? Ki+3 ?? CKi) i=0, 1,...,31
+    :param mk: ??????Ô¿, 16byte, 128bit
     :return list
     """
-    # ³¢ÊÔ´ÓÂÖÃÜÔ¿»º´æÖĞ»ñÈ¡ÂÖÃÜÔ¿
-    # Ã»ÓĞ»ñÈ¡µ½, ¸ù¾İÃÜÔ¿À©Õ¹Ëã·¨Éú³É
+    # ???Ô´?????Ô¿?????Ğ»?È¡????Ô¿
+    # Ã»?Ğ»?È¡??, ??????Ô¿??Õ¹?ã·¨????
     _rk_keys = _rk_cache.get(mk)
     if _rk_keys is None:
         mk0, mk1, mk2, mk3 = _byte_unpack(mk, byte_n=16)
@@ -210,16 +210,16 @@ def _round_keys(mk):
             rk = keys[i] ^ _rep_t_s(keys[i + 1] ^ keys[i + 2] ^ keys[i + 3] ^ CK[i])
             keys.append(rk)
         _rk_keys = keys[4:]
-        # ¼ÓÈëÂÖÃÜÔ¿»º´æÖĞ
+        # ????????Ô¿??????
         _rk_cache[mk] = _rk_keys
     return _rk_keys
 
 
 def _round_f(byte4_array, rk):
     """
-    ÂÖº¯Êı, F(X0, X1, X2, X3, rk) = X0 ¨’ T(X1 ¨’ X2 ¨’ X3 ¨’ rk)
-    :param byte4_array: (X0, X1, X2, X3), Ã¿Ò»Ïî4byte, 32bit
-    :param rk: ÂÖÃÜÔ¿, 4byte, 32bit
+    ?Öº???, F(X0, X1, X2, X3, rk) = X0 ?? T(X1 ?? X2 ?? X3 ?? rk)
+    :param byte4_array: (X0, X1, X2, X3), Ã¿Ò»??4byte, 32bit
+    :param rk: ????Ô¿, 4byte, 32bit
     """
     x0, x1, x2, x3 = byte4_array
     return x0 ^ _rep_t(x1 ^ x2 ^ x3 ^ rk)
@@ -227,10 +227,10 @@ def _round_f(byte4_array, rk):
 
 def _crypt(num, mk, mode=SM4_ENCRYPT):
     """
-    SM4¼ÓÃÜºÍ½âÃÜ
-    :param num: ÃÜÎÄ»òÃ÷ÎÄ 16byte
-    :param mk:  ÃÜÔ¿ 16byte
-    :param mode: ÂÖÃÜÔ¿Ë³Ğò
+    SM4???ÜºÍ½???
+    :param num: ???Ä»????? 16byte
+    :param mk:  ??Ô¿ 16byte
+    :param mode: ????Ô¿Ë³??
     """
     x_keys = list(_byte_unpack(num, byte_n=16))
     round_keys = _round_keys(mk)
@@ -243,30 +243,30 @@ def _crypt(num, mk, mode=SM4_ENCRYPT):
 
 def encrypt(clear_num, mk):
     """
-    SM4¼ÓÃÜËã·¨ÓÉ32´Îµü´úÔËËãºÍ1´Î·´Ğò±ä»»R×é³É.
-    Ã÷ÎÄÊäÈëÎª(X0, X1, X2, X3), Ã¿Ò»Ïî4byte, ÃÜÎÄÊä³öÎª(Y0, Y1, Y2, Y3), Ã¿Ò»Ïî4byte
-    ÂÖÃÜÔ¿Îªrki, i=0,1,...,32, 4byte, ÔËËã¹ı³ÌÈçÏÂ:
-    1). 32´Îµü´úÔËËã: Xi+4 = F(Xi, Xi+1, Xi+2, Xi+3, rki), i=0,1,...,32
-    2). ·´Ğò±ä»»: (Y0, Y1, Y2, Y3) = (X35, X34, X33, X32)
-    :param clear_num: Ã÷ÎÄ, 16byte
-    :param mk: ÃÜÔ¿, 16byte
+    SM4?????ã·¨??32?Îµ?????????1?Î·????ä»»R????.
+    ????????Îª(X0, X1, X2, X3), Ã¿Ò»??4byte, ????????Îª(Y0, Y1, Y2, Y3), Ã¿Ò»??4byte
+    ????Ô¿Îªrki, i=0,1,...,32, 4byte, ????????????:
+    1). 32?Îµ???????: Xi+4 = F(Xi, Xi+1, Xi+2, Xi+3, rki), i=0,1,...,32
+    2). ?????ä»»: (Y0, Y1, Y2, Y3) = (X35, X34, X33, X32)
+    :param clear_num: ????, 16byte
+    :param mk: ??Ô¿, 16byte
     """
     return _crypt(num=clear_num, mk=mk)
 
 
 def decrypt(cipher_num, mk):
     """
-    SM4½âÃÜËã·¨, ½âÃÜ±ä»»Óë¼ÓÃÜ±ä»»½á¹¹ÏàÍ¬, ²»Í¬µÄ½öÊÇÂÖÃÜÔ¿µÄÊ¹ÓÃË³Ğò.
-    ½âÃÜÊ±ÂÖÃÜÔ¿Ê¹ÓÃË³ĞòÎª(rk31,rk30,...,rk0)
-    :param cipher_num: ÃÜÎÄ, 16byte
-    :param mk: ÃÜÔ¿, 16byte
+    SM4?????ã·¨, ???Ü±ä»»?????Ü±ä»»?á¹¹??Í¬, ??Í¬?Ä½???????Ô¿??Ê¹??Ë³??.
+    ????Ê±????Ô¿Ê¹??Ë³??Îª(rk31,rk30,...,rk0)
+    :param cipher_num: ????, 16byte
+    :param mk: ??Ô¿, 16byte
     """
     return _crypt(num=cipher_num, mk=mk, mode=SM4_DECRYPT)
 
 
 def _padding(text, mode=SM4_ENCRYPT):
     """
-    ¼ÓÃÜÌî³äºÍ½âÃÜÈ¥Ìî³ä
+    ?????????Í½???È¥????
     """
     # python2 is (basestring, )
     # python3 is (str, bytes)
@@ -279,13 +279,13 @@ def _padding(text, mode=SM4_ENCRYPT):
         text = text.encode(encoding=E_FMT)
 
     if mode == SM4_ENCRYPT:
-        # Ìî³ä
+        # ????
         p_num = BLOCK_BYTE - (len(text) % BLOCK_BYTE)
         space = '' if PY2 else b''
         pad_s = (chr(p_num) * p_num) if PY2 else (chr(p_num).encode(E_FMT) * p_num)
         res = space.join([text, pad_s])
     else:
-        # È¥Ìî³ä
+        # È¥????
         p_num = ord(text[-1]) if PY2 else text[-1]
         res = text[:-p_num]
     return res
@@ -293,9 +293,9 @@ def _padding(text, mode=SM4_ENCRYPT):
 
 def _key_iv_check(key_iv):
     """
-    ÃÜÔ¿»ò³õÊ¼»¯ÏòÁ¿¼ì²â
+    ??Ô¿????Ê¼??????????
     """
-    # ÃÜÔ¿
+    # ??Ô¿
     if key_iv is None or not isinstance(key_iv, string_types):
         raise TypeError('Parameter key or iv:{} not a basestring'.format(key_iv))
 
@@ -309,8 +309,8 @@ def _key_iv_check(key_iv):
 
 
 def _hex(str_or_bytes):
-    # PY2: _hex('±±¾©') --> 'e58c97e4baac'
-    # PY3: _hex('±±¾©') --> b'e58c97e4baac'
+    # PY2: _hex('????') --> 'e58c97e4baac'
+    # PY3: _hex('????') --> b'e58c97e4baac'
     if PY2:
         hex_str = hexlify(str_or_bytes)
     else:
@@ -331,18 +331,18 @@ def _unhex(hex_str):
     return unhexlify(hex_str)
 
 
-# µç×ÓÃÜÂë±¾(ECB)
+# ???????ë±¾(ECB)
 def encrypt_ecb(plain_text, key):
     """
-    SM4(ECB)¼ÓÃÜ
-    :param plain_text: Ã÷ÎÄ
-    :param key: ÃÜÔ¿, Ğ¡ÓÚµÈÓÚ16×Ö½Ú
+    SM4(ECB)????
+    :param plain_text: ????
+    :param key: ??Ô¿, Ğ¡?Úµ???16?Ö½?
     """
     plain_text = _padding(plain_text, mode=SM4_ENCRYPT)
     if plain_text is None:
         return
 
-    # ÃÜÔ¿¼ìÑé
+    # ??Ô¿????
     key = _key_iv_check(key_iv=key)
 
     plain_hex = _hex(plain_text)
@@ -356,17 +356,16 @@ def encrypt_ecb(plain_text, key):
     return _unhex(''.join(cipher_hex_list))
     # cipher_text = b64encode(_unhex(''.join(cipher_hex_list)))
     # return cipher_text if PY2 else cipher_text.decode(E_FMT)
-
 def decrypt_ecb(cipher_text, key):
     """
-    SM4(ECB)½âÃÜ
-    :param cipher_text: ÃÜÎÄ
-    :param key: ÃÜÔ¿, Ğ¡ÓÚµÈÓÚ16×Ö½Ú
+    SM4(ECB)????
+    :param cipher_text: ????
+    :param key: ??Ô¿, Ğ¡?Úµ???16?Ö½?
     """
-    cipher_text = b64decode(cipher_text)
+    # cipher_text = b64decode(cipher_text)
     cipher_hex = _hex(cipher_text)
 
-    # ÃÜÂë¼ìÑé
+    # ????????
     key = _key_iv_check(key_iv=key)
     plain_hex_list = []
     for i in _range(len(cipher_text) // BLOCK_BYTE):
@@ -375,26 +374,25 @@ def decrypt_ecb(cipher_text, key):
                         mk=int(_hex(key), 16))
         plain_hex_list.append(num2hex(num=plain, width=BLOCK_HEX))
 
-    plain_text = _padding(_unhex(''.join(plain_hex_list)),
-                          mode=SM4_DECRYPT)
-    return plain_text if PY2 else plain_text.decode(E_FMT)
+    return _unhex(''.join(plain_hex_list))
 
-
-# ÃÜÂë¿éÁ´½Ó(CBC)
+    # plain_text = _padding(_unhex(''.join(plain_hex_list)), mode =
+    # SM4_DECRYPT)
+    # return plain_text if PY2 else plain_text.decode(E_FMT)
 def encrypt_cbc(plain_text, key, iv):
     """
-    SM4(CBC)¼ÓÃÜ
-    :param plain_text: Ã÷ÎÄ
-    :param key: ÃÜÔ¿, Ğ¡ÓÚµÈÓÚ16×Ö½Ú
-    :param iv: ³õÊ¼»¯ÏòÁ¿, Ğ¡ÓÚµÈÓÚ16×Ö½Ú
+    SM4(CBC)????
+    :param plain_text: ????
+    :param key: ??Ô¿, Ğ¡?Úµ???16?Ö½?
+    :param iv: ??Ê¼??????, Ğ¡?Úµ???16?Ö½?
     """
     plain_text = _padding(plain_text, mode=SM4_ENCRYPT)
     if plain_text is None:
         return
 
-    # ÃÜÔ¿¼ìÑé
+    # ??Ô¿????
     key = _key_iv_check(key_iv=key)
-    # ³õÊ¼»¯ÏòÁ¿¼à²â
+    # ??Ê¼??????????
     iv = _key_iv_check(key_iv=iv)
 
     plain_hex = _hex(plain_text)
@@ -412,17 +410,17 @@ def encrypt_cbc(plain_text, key, iv):
 
 def decrypt_cbc(cipher_text, key, iv):
     """
-    SM4(CBC)½âÃÜ
-    :param cipher_text: ÃÜÎÄ
-    :param key: ÃÜÔ¿ Ğ¡ÓÚµÈÓÚ16×Ö½Ú
-    :param iv: ³õÊ¼»¯ÏòÁ¿ Ğ¡ÓÚµÈÓÚ16×Ö½Ú
+    SM4(CBC)????
+    :param cipher_text: ????
+    :param key: ??Ô¿ Ğ¡?Úµ???16?Ö½?
+    :param iv: ??Ê¼?????? Ğ¡?Úµ???16?Ö½?
     """
-    cipher_text = b64decode(cipher_text)
+    # cipher_text = b64decode(cipher_text)
     cipher_hex = _hex(cipher_text)
 
-    # ÃÜÔ¿¼ì²â
+    # ??Ô¿????
     key = _key_iv_check(key_iv=key)
-    # ³õÊ¼»¯ÏòÁ¿¼ì²â
+    # ??Ê¼??????????
     iv = _key_iv_check(key_iv=iv)
     ivs = [int(_hex(iv), 16)]
     plain_hex_list = []

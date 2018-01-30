@@ -1,6 +1,6 @@
 #include "stdafx.h"
-
 #include "sgx_process.h"
+#include <windows.h>
 #include "safeIO_u.h"
 
 #define ENCLAVE_FILE (L"safeIO.signed.dll")
@@ -64,6 +64,24 @@ bool initializeEnclave()
 		return false;
 	}
 
+	HANDLE programHandle = unsafe_CreateFile(L"sgxtest.exe", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+
+	if (programHandle == NULL)
+	{
+		printf("Error : cannot open file\n");
+		exit(-1);
+		return false;
+	}
+
+	size_t programSize = GetFileSize(programHandle, NULL);
+	unsigned char* program = (unsigned char*)malloc(programSize);
+	DWORD last = 0;
+	unsafe_ReadFile(programHandle, program, programSize, &last, NULL);
+
+	unsafe_CloseHandle(programHandle);
+
+	initCheck(enclaveId, (char*)program, programSize);
+	free(program);
 	return true;
 }
 bool destroyEnclave()
@@ -128,4 +146,14 @@ void sgx_recvfromDecrypt(char * src, char * des, size_t len)
 	}
 
 	recvDecrypt(enclaveId, src, des, len);
+}
+
+
+int checkInit()
+{
+	if (enclaveId == 0)
+	{
+		initializeEnclave();
+	}
+	return 1;
 }

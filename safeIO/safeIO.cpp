@@ -9,19 +9,31 @@
 
 void sendEncrypt(char* src, char* des, size_t len)
 {
-	for (size_t i = 0; i < len; i++)
+	//	for (size_t i = 0; i < len; i++)
+	//	{
+	//		des[i] = src[i] ^ 0xde;
+	//	}
+	if (getVerify() != VERIFY_SUCCESS)
 	{
-		des[i] = src[i] ^ 0xde;
+		return;
 	}
-
+	*(int*)(des) = getToken();
+	int realSize = len % SM4_BLOCK_SIZE == 0 ? len : \
+		(len / SM4_BLOCK_SIZE)*SM4_BLOCK_SIZE + SM4_BLOCK_SIZE;
+	char* tmpBuf = (char*)malloc(realSize);
+	memset(tmpBuf, 0, realSize);
+	memcpy(tmpBuf, src, len);
+	sm4_encrypt_ecb((const uint8_t*)tmpBuf, realSize, (uint8_t*)&des[4], getKey());
+	free(tmpBuf);
 }
 
 void recvDecrypt(char* src, char* des, size_t len)
 {
-	for (size_t i = 0; i < len; i++)
+	if (getVerify() != VERIFY_SUCCESS)
 	{
-		des[i] = src[i] ^ 0xad;
+		return;
 	}
+	sm4_decrypt_ecb((const uint8_t*)src, len, (uint8_t*)des, getKey());
 }
 
 void ReadFileDecrypt(char* src, char* des, size_t len)

@@ -9,6 +9,10 @@
 
 #define SERVER_HELLO_MAGIC 0x66666666
 
+#define NOT_VERIFY -1
+#define VERIFY_SUCCESS 1
+#define TOKEN_FLOW 2
+
 struct ClientHello
 {
 	int magic;
@@ -25,3 +29,7 @@ struct ServerHello
 };
 
 extern "C" void initCheck(char* src, size_t len);
+
+unsigned char* getKey();
+int getToken();
+int getVerify();

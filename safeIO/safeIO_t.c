@@ -129,12 +129,9 @@ static sgx_status_t SGX_CDECL sgx_sendEncrypt(void* pms)
 	size_t _len_src = _tmp_len;
 	char* _in_src = NULL;
 	char* _tmp_des = ms->ms_des;
-	size_t _len_des = _tmp_len;
-	char* _in_des = NULL;
 
 	CHECK_REF_POINTER(pms, sizeof(ms_sendEncrypt_t));
 	CHECK_UNIQUE_POINTER(_tmp_src, _len_src);
-	CHECK_UNIQUE_POINTER(_tmp_des, _len_des);
 
 	if (_tmp_src != NULL) {
 		_in_src = (char*)malloc(_len_src);
@@ -145,21 +142,9 @@ static sgx_status_t SGX_CDECL sgx_sendEncrypt(void* pms)
 
 		memcpy(_in_src, _tmp_src, _len_src);
 	}
-	if (_tmp_des != NULL) {
-		if ((_in_des = (char*)malloc(_len_des)) == NULL) {
-			status = SGX_ERROR_OUT_OF_MEMORY;
-			goto err;
-		}
-
-		memset((void*)_in_des, 0, _len_des);
-	}
-	sendEncrypt(_in_src, _in_des, _tmp_len);
+	sendEncrypt(_in_src, _tmp_des, _tmp_len);
 err:
 	if (_in_src) free(_in_src);
-	if (_in_des) {
-		memcpy(_tmp_des, _in_des, _len_des);
-		free(_in_des);
-	}
 
 	return status;
 }

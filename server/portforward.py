@@ -1,39 +1,176 @@
 import time
 import socket
 import threading
+import thread
+import struct
+import pysm4
+from token import get_key, del_token
+def str2hex(data):
+    res = ''
+    for i in data:
+        res += hex(ord(i)).replace('0x','')
+    return res
 
 def log(strLog):
     strs = time.strftime("%Y-%m-%d %H:%M:%S")
     print strs + " -> " + strLog
 
-class pipethread(threading.Thread):
+def start_thread(thread_class):
+    thread.start_new_thread(thread_class.run, ())
+
+
+class pipethreadSend(threading.Thread):
     '''
     classdocs
     '''
-    def __init__(self,source,sink):
+    def __init__(self,source,sink,recv_thread=None):
         '''
         Constructor
         '''
         threading.Thread.__init__(self)
         self.source = source
         self.sink = sink
-        log("New Pipe create:%s->%s" % (self.source.getpeername(),self.sink.getpeername()))
+        self.recv_thread = recv_thread
+        self.__is_runing = True
+        log("New send Pipe create:%s->%s" % (self.source.getpeername(),self.sink.getpeername()))
     def run(self):
+        self.source.settimeout(60)
         while True:
             try:
-                data = self.source.recv(1024)
+                data = self.source.recv(4096)
+                break
+            except socket.timeout:
+                continue
+            except Exception as e:
+                log("first Send message failed")
+                log(str(e))
+                self._end()
+                return
+        if data is None:
+            log("first Send message none")
+            self._end()
+            return
+        print(str2hex(data))
+        token = struct.unpack('i',data[0:4])[0]
+        key = get_key(str(token))
+        if key is None:
+            self._end()
+            return
+        if self.recv_thread is not None:
+
+            self.recv_thread.key = key
+        print(len(data))
+        print(str2hex(key))
+        decrypt_message = pysm4.decrypt_ecb(data[4:],key)
+        print('recv : ' + decrypt_message)
+
+        # add verify here
+        self.sink.send(decrypt_message)
+        self.source.settimeout(60)
+        while self.__is_runing:
+            try:
+                try:
+                    data = self.source.recv(4096)
+                except socket.timeout:
+                    continue
                 if not data: break
 
+                get_token = struct.unpack('i',data[0:4])[0]
+                if get_token != token:
+                    break
+                decrypt_message = pysm4.decrypt_ecb(data[4:],key)
+                print('recv : ' + decrypt_message)
 
                 # add verify here
-
-
-                self.sink.send(data)
+                self.sink.send(decrypt_message)
             except Exception ,ex:
                 log("redirect error:" + str(ex))
                 break
-        self.source.close()
-        self.sink.close()
+
+        self._end()
+    def terminate(self):
+        self.__is_runing = False
+
+    def _end(self):
+        self.recv_thread.terminate()
+        try:
+            self.source.close()
+            self.sink.close()
+        except Exception:
+            pass
+        
+
+class pipethreadRecv(threading.Thread):
+    '''
+    classdocs
+    '''
+    def __init__(self,source,sink,send_thread=None):
+        '''
+        Constructor
+        '''
+        threading.Thread.__init__(self)
+        self.source = source
+        self.sink = sink
+        self.key = ''
+        self.send_thread = send_thread
+        self.__is_runing = True
+        log("New recv Pipe create:%s->%s" % (self.source.getpeername(),self.sink.getpeername()))
+    def run(self):
+        self.source.settimeout(60)
+        while True:
+            try:
+                data = self.source.recv(4096)
+                break
+            except socket.timeout:
+                continue
+            except Exception as e:
+                log("first recv message failed")
+                log(str(e))
+                self._end()
+                return
+        if data is None:
+            log("first recv message none")
+            self._end()
+            return
+
+        # token = struct.unpack('i',data[0:4])[0]
+        key = self.key
+        if len(key) == 0:
+            log("first key message failed")
+            self._end()
+            return
+        encrypt_message = pysm4.encrypt_ecb(data,key)
+        print('send : ' + data)
+        self.sink.send(encrypt_message)
+        self.source.settimeout(60)
+        while self.__is_runing:
+            try:
+                try:
+                    data = self.source.recv(4096)
+                except socket.timeout:
+                    continue
+                if not data: break
+                encrypt_message = pysm4.encrypt_ecb(data,key)
+                print('send : ' + data)
+
+                # add verify here
+                self.sink.send(encrypt_message)
+            except Exception ,ex:
+                log("redirect error:" + str(ex))
+                break
+        self._end() 
+
+    def terminate(self):
+        self.__is_runing = False
+
+    def _end(self):
+        self.send_thread.terminate()
+        try:
+            self.source.close()
+            self.sink.close()
+        except Exception:
+            pass
+
 class portmap(threading.Thread):
 
     def __init__(self, port, newhost, newport, local_ip=''):
@@ -49,8 +186,12 @@ class portmap(threading.Thread):
         log("start listen protocol:%s,port:%d " % (self.protocol, port))
 
     def run(self):
+        self.sock.settimeout(5)
         while True:
-            newsock, address = self.sock.accept()
+            try:
+                newsock, address = self.sock.accept()
+            except socket.timeout:
+                continue
             log("new connection->protocol:%s,local port:%d,remote address:%s" % (self.protocol, self.port,address[0]))
             fwd = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
             try:
@@ -58,11 +199,14 @@ class portmap(threading.Thread):
             except Exception ,ex:
                 log("connet newhost error:" + str(ex))
                 break
-            p1 = pipethread(newsock, fwd)
-            p1.start()
-            p2 = pipethread(fwd, newsock)
-            p2.start()
-
+            p2 = pipethreadRecv(fwd, newsock)
+            p1 = pipethreadSend(newsock, fwd, p2)
+            p2.send_thread = p1
+            start_thread(p1)
+            start_thread(p2)
+            # p1.start()
+            # p2.start()
+            # self.sock.listen(5)
 class pipethreadUDP(threading.Thread):
     def __init__(self, connection, connectionTable, table_lock):
         threading.Thread.__init__(self)
