@@ -11,7 +11,7 @@
 #include <string>
 #include <fstream>
 #include "safeIO_u.h"
-
+#include <MinHook.h>
 
 #pragma comment(lib, "ws2_32.lib")
 #define HOOK_NET_MODULE (L"ws2_32.dll")
@@ -54,6 +54,10 @@ bool initFileList()
 
 void initHook()
 {
+	if (MH_Initialize() != MH_OK)
+	{
+		exit(-1);
+	}
 	HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
 	HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
 	HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, sendtoHook);
@@ -66,6 +70,7 @@ void initHook()
 
 void destoryHook()
 {
+	MH_Uninitialize();
 	UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
 	UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
 	UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
