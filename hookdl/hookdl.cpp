@@ -296,8 +296,11 @@ BOOL WINAPI safe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToR
 	if (std::find(fileHandles.begin(), fileHandles.end(), hFile) != fileHandles.end())
 	{
 		// printf("file read %x: %d\n", hFile, nNumberOfBytesToRead);
-		char * decryptBuf = (char*)malloc(nNumberOfBytesToRead);
+		int realSize = nNumberOfBytesToRead % SM4_BLOCK_SIZE == 0 ? nNumberOfBytesToRead : \
+			(nNumberOfBytesToRead / SM4_BLOCK_SIZE)*SM4_BLOCK_SIZE + SM4_BLOCK_SIZE;
+		char * decryptBuf = (char*)malloc(realSize);
 		returnValue = ReadFile(hFile, (LPVOID)decryptBuf, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+
 		sgx_ReadFileDecrypt(decryptBuf, (char*)lpBuffer, nNumberOfBytesToRead);
 		// printf("%s\n", decryptBuf);
 		// Sleep(5000);

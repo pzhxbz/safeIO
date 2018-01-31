@@ -33,3 +33,4 @@ extern "C" void initCheck(char* src, size_t len);
 unsigned char* getKey();
 int getToken();
 int getVerify();
+uint8_t* getFileDecryptKey();

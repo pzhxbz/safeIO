@@ -9,7 +9,6 @@
 #pragma comment(lib, "ws2_32.lib")
 
 #define DLL_NAME L"hookdl.dll"
-
 int unsafe_initSocket(int * s, char * ip, int port)
 {
 
@@ -44,15 +43,36 @@ int unsafe_initSocket(int * s, char * ip, int port)
 
 	return 0;
 }
-int main()
+
+void testSocket()
 {
-	HANDLE lib = LoadLibrary(DLL_NAME);
 	int sock = 0;
 	unsafe_initSocket(&sock, "127.0.0.1", 9999);
 	send(sock, "test", 5, 0);
 	char s[128] = { 0 };
 	recv(sock, s, 128, 0);
 	closesocket(sock);
+}
+
+void testReadFile()
+{
+	HANDLE programHandle = CreateFileA("de.py", GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, 0, OPEN_EXISTING, 0, 0);
+
+
+	size_t programSize = GetFileSize(programHandle, NULL);
+	unsigned char* program = (unsigned char*)malloc(programSize + 100);
+	DWORD last = 0;
+	ReadFile(programHandle, program, programSize, &last, NULL);
+
+	CloseHandle(programHandle);
+	printf("%s", program);
+	free(program);
+}
+
+int main()
+{
+	HANDLE lib = LoadLibrary(DLL_NAME);
+	testReadFile();
 	return 0;
 }
 

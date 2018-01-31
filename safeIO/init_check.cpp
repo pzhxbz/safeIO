@@ -18,6 +18,8 @@ static int isVerify = 0;
 
 static int token = -1;
 
+static char fileKey[] = "thisisthetestkey";
+
 char RsaPublicKey[] = "-----BEGIN PUBLIC KEY-----\n\
 MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnOvAI4RlfQegd+MJLx7b\n\
 Gce77+/sAwk6YSG2ScraWjsJk4ZFZw2JdJo/mhN10Hi5GmR75NAYXj1sdR60/nZM\n\
@@ -124,4 +126,9 @@ int getToken()
 int getVerify()
 {
 	return isVerify;
+}
+
+uint8_t* getFileDecryptKey()
+{
+	return (uint8_t*)fileKey;
 }

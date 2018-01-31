@@ -7,7 +7,7 @@ enclave {
 
 
 		public void recvDecrypt([in,size=len]char* src,[out,size=len]char* des, size_t len);
-		public void ReadFileDecrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
+		public void ReadFileDecrypt([in,size=len]char* src, [user_check]char* des, size_t len);
 		public void SendtoEncrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
 		public void recvfromDecrypt([in,size=len]char* src, [out,size=len]char* des, size_t len);
 		public void initCheck([in,size=len]char * src, size_t len);
