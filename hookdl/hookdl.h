@@ -80,8 +80,8 @@ HANDLE  unsafe_CreateFile(
 );
 
 
-DWORD HookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID lpFunction, unsigned char *lpBackup);
-BOOL UnHookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, unsigned char *lpBackup);
+DWORD HookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID lpFunction, LPVOID *lpBackup);
+BOOL UnHookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID *lpBackup);
 
 void initHook();
 void destoryHook();

@@ -18,15 +18,42 @@
 #define HOOK_FILE_MODULE (L"kernel32.dll")
 #define JMP_LENGTH 6
 
-BYTE jmp[JMP_LENGTH] = { 0xe9,0x00, 0x00, 0x00, 0x00 ,0xc3 };
-BYTE sendHook[JMP_LENGTH] = { 0 };
-BYTE recvHook[JMP_LENGTH] = { 0 };
-BYTE sendtoHook[JMP_LENGTH] = { 0 };
-BYTE readFileHook[JMP_LENGTH] = { 0 };
-BYTE createFileHook[JMP_LENGTH] = { 0 };
-BYTE createFileAHook[JMP_LENGTH] = { 0 };
-BYTE closeHandleHook[JMP_LENGTH] = { 0 };
-BYTE recvfromHook[JMP_LENGTH] = { 0 };
+// BYTE jmp[JMP_LENGTH] = { 0xe9,0x00, 0x00, 0x00, 0x00 ,0xc3 };
+
+
+typedef int (WINAPI *sendFunc)(SOCKET s, const char *buf, int len, int flags);
+typedef int (WINAPI *recvFunc)(SOCKET s, char* buf, int len, int flags);
+typedef int (WINAPI *sendtoFunc)(SOCKET s, const char *buf, int len, int flags, const struct sockaddr *to, int tolen);
+typedef int (WINAPI *recvfromFunc)(SOCKET s, char *buf, int len, int flags, struct sockaddr *from, int *fromlen);
+typedef BOOL(WINAPI *ReadFileFunc)(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped);
+
+typedef HANDLE(WINAPI *CreateFileFunc)(
+	LPCTSTR               lpFileName,
+	DWORD                 dwDesiredAccess,
+	DWORD                 dwShareMode,
+	LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+	DWORD                 dwCreationDisposition,
+	DWORD                 dwFlagsAndAttributes,
+	HANDLE                hTemplateFile
+	);
+typedef HANDLE(WINAPI *CreateFileAFunc)(
+	LPCSTR               lpFileName,
+	DWORD                 dwDesiredAccess,
+	DWORD                 dwShareMode,
+	LPSECURITY_ATTRIBUTES lpSecurityAttributes,
+	DWORD                 dwCreationDisposition,
+	DWORD                 dwFlagsAndAttributes,
+	HANDLE                hTemplateFile
+	);
+typedef BOOL(WINAPI *CloseHandleFunc)(HANDLE hObject);
+sendFunc sendHook = NULL;
+recvFunc recvHook = NULL;
+sendtoFunc sendtoHook = NULL;
+ReadFileFunc readFileHook = NULL;
+CreateFileFunc createFileHook = NULL;
+CreateFileAFunc createFileAHook = NULL;
+CloseHandleFunc closeHandleHook = NULL;
+recvfromFunc recvfromHook = NULL;
 
 
 std::list<HANDLE> fileHandles;
@@ -58,33 +85,34 @@ void initHook()
 	{
 		exit(-1);
 	}
-	HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
-	HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
-	HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, sendtoHook);
-	HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, recvfromHook);
-	HookFunction(HOOK_FILE_MODULE, "ReadFile", (LPVOID)safe_ReadFile, readFileHook);
-	HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, createFileHook);
-	HookFunction(HOOK_FILE_MODULE, "CreateFileA", (LPVOID)safe_CreateFileA, createFileAHook);
-	HookFunction(HOOK_FILE_MODULE, "CloseHandle", (LPVOID)safe_CloseHandle, closeHandleHook);
+	HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, (LPVOID*)&sendHook);
+	HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, (LPVOID*)&recvHook);
+	HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, (LPVOID*)&sendtoHook);
+	HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, (LPVOID*)&recvfromHook);
+	HookFunction(HOOK_FILE_MODULE, "ReadFile", (LPVOID)safe_ReadFile, (LPVOID*)&readFileHook);
+	HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, (LPVOID*)&createFileHook);
+	HookFunction(HOOK_FILE_MODULE, "CreateFileA", (LPVOID)safe_CreateFileA, (LPVOID*)&createFileAHook);
+	HookFunction(HOOK_FILE_MODULE, "CloseHandle", (LPVOID)safe_CloseHandle, (LPVOID*)&closeHandleHook);
 }
 
 void destoryHook()
 {
 	MH_Uninitialize();
-	UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
-	UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
-	UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
-	UnHookFunction(HOOK_NET_MODULE, "recvfrom", recvfromHook);
-	UnHookFunction(HOOK_FILE_MODULE, "ReadFile", readFileHook);
-	UnHookFunction(HOOK_FILE_MODULE, "CreateFileW", createFileHook);
-	UnHookFunction(HOOK_FILE_MODULE, "CreateFileA", createFileAHook);
-	UnHookFunction(HOOK_FILE_MODULE, "CloseHandle", closeHandleHook);
+	UnHookFunction(HOOK_NET_MODULE, "send", (LPVOID*)&sendHook);
+	UnHookFunction(HOOK_NET_MODULE, "recv", (LPVOID*)&recvHook);
+	UnHookFunction(HOOK_NET_MODULE, "sendto", (LPVOID*)& sendtoHook);
+	UnHookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID*)&recvfromHook);
+	UnHookFunction(HOOK_FILE_MODULE, "ReadFile", (LPVOID*)&readFileHook);
+	UnHookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID*)& createFileHook);
+	UnHookFunction(HOOK_FILE_MODULE, "CreateFileA", (LPVOID*)&createFileAHook);
+	UnHookFunction(HOOK_FILE_MODULE, "CloseHandle", (LPVOID*)&closeHandleHook);
 }
 
 
 int checkSendHooked()
 {
-	DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(HOOK_NET_MODULE), "send");
+	return 0;
+	/*DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(HOOK_NET_MODULE), "send");
 	if (dwAddr == 0)
 	{
 		printf_s("can't chk send hook\n");
@@ -96,11 +124,12 @@ int checkSendHooked()
 	{
 		return 0;
 	}
-	return 1;
+	return 1;*/
 }
 int checkReadFileHooked()
 {
-	DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(HOOK_FILE_MODULE), "ReadFile");
+	return 0;
+	/*DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(HOOK_FILE_MODULE), "ReadFile");
 	if (dwAddr == 0)
 	{
 		printf_s("can't chk readfile hook\n");
@@ -112,32 +141,42 @@ int checkReadFileHooked()
 	{
 		return 0;
 	}
-	return 1;
+	return 1;*/
 }
 
-DWORD HookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID lpFunction, unsigned char *lpBackup)
+DWORD HookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID lpFunction, LPVOID *lpBackup)
 {
-	DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(lpModule), lpFuncName);
-	if (dwAddr == 0)
+
+	MH_CreateHookApi(lpModule, lpFuncName, lpFunction, lpBackup);
+	if (MH_EnableHook(MH_ALL_HOOKS) != MH_OK)
 	{
-		printf_s("can't find %s addr\n", lpFuncName);
-		printf_s("0x%x\n", GetModuleHandle((LPCWSTR)lpModule));
-		return 0;
+		printf_s("can't create %s hook\n", lpFuncName);
+		exit(-1);
 	}
-	//printf_s("find %s addr : 0x%x\n", lpFuncName, dwAddr);
-	ReadProcessMemory(GetCurrentProcess(), (LPVOID)dwAddr, lpBackup, 6, 0);
-	DWORD dwCalc = ((DWORD)lpFunction - dwAddr - 5);
-	memcpy(&jmp[1], &dwCalc, 4);
-	WriteProcessMemory(GetCurrentProcess(), (LPVOID)dwAddr, jmp, 6, 0);
-	return dwAddr;
+	return 1;
+	//DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(lpModule), lpFuncName);
+	//if (dwAddr == 0)
+	//{
+	//	printf_s("can't find %s addr\n", lpFuncName);
+	//	printf_s("0x%x\n", GetModuleHandle((LPCWSTR)lpModule));
+	//	return 0;
+	//}
+	////printf_s("find %s addr : 0x%x\n", lpFuncName, dwAddr);
+	//ReadProcessMemory(GetCurrentProcess(), (LPVOID)dwAddr, lpBackup, 6, 0);
+	//DWORD dwCalc = ((DWORD)lpFunction - dwAddr - 5);
+	//memcpy(&jmp[1], &dwCalc, 4);
+	//WriteProcessMemory(GetCurrentProcess(), (LPVOID)dwAddr, jmp, 6, 0);
+	//return dwAddr;
 }
 
-BOOL UnHookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, unsigned char *lpBackup)
+BOOL UnHookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, LPVOID *lpBackup)
 {
-	DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(lpModule), lpFuncName);
+
+	return MH_DisableHook(lpBackup) == MH_OK;
+	/*DWORD dwAddr = (DWORD)GetProcAddress(GetModuleHandle(lpModule), lpFuncName);
 	if (WriteProcessMemory(GetCurrentProcess(), (LPVOID)dwAddr, lpBackup, 6, 0))
 		return TRUE;
-	return FALSE;
+	return FALSE;*/
 }
 
 
@@ -145,7 +184,7 @@ BOOL UnHookFunction(LPCWSTR lpModule, LPCSTR lpFuncName, unsigned char *lpBackup
 int WINAPI safe_send(SOCKET s, const char * buf, int len, int flags)
 {
 
-	UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
+	//UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
 
 	size_t realLength = len % SM4_BLOCK_SIZE == 0 ? len + 4 : \
 		(len / SM4_BLOCK_SIZE) * SM4_BLOCK_SIZE + 4 + SM4_BLOCK_SIZE; // i don't think it's can easily understand
@@ -153,25 +192,25 @@ int WINAPI safe_send(SOCKET s, const char * buf, int len, int flags)
 
 	sgx_sendEncrypt((char*)buf, encryptBuf, len);
 
-	int returnValue = send(s, encryptBuf, realLength, flags);
+	int returnValue = sendHook(s, encryptBuf, realLength, flags);
 
 
 	free(encryptBuf);
-	HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
+	//HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
 	return returnValue;
 }
 
 int WINAPI safe_recv(SOCKET s, char * buf, int len, int flags)
 {
-	UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
+	//UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
 
 	char* decryptBuf = (char*)malloc(len);
 
-	int returnValue = recv(s, decryptBuf, len, flags);
+	int returnValue = recvHook(s, decryptBuf, len, flags);
 
 	sgx_recvDecrypt(decryptBuf, buf, len);
 
-	HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
+	//HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
 
 	free(decryptBuf);
 
@@ -216,26 +255,26 @@ extern "C" int unsafe_initSocket(int * s, char * ip, int port)
 
 extern "C" int unsafe_send(int s, char * buf, int len, int flags)
 {
-	int isHooked = checkSendHooked();
-	if (!isHooked)
-	{
-		return send(s, buf, len, flags);
-	}
-	UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
+	//int isHooked = checkSendHooked();
+	//if (!isHooked)
+	//{
+	//	return send(s, buf, len, flags);
+	//}
+	//UnHookFunction(HOOK_NET_MODULE, "send", sendHook);
 
-	int returnValue = send(s, buf, len, flags);
+	int returnValue = sendHook(s, buf, len, flags);
 
-	HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
+	//HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
 	return returnValue;
 }
 
 extern "C" int unsafe_recv(int s, char * buf, int len, int flags)
 {
-	UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
+	//UnHookFunction(HOOK_NET_MODULE, "recv", recvHook);
 
-	int returnValue = recv(s, buf, len, flags);
+	int returnValue = recvHook(s, buf, len, flags);
 
-	HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
+	//HookFunction(HOOK_NET_MODULE, "recv", (LPVOID)safe_recv, recvHook);
 
 	return returnValue;
 }
@@ -247,54 +286,54 @@ extern "C" int unsafe_closesocket(int s)
 
 int WINAPI safe_sendto(SOCKET s, const char * buf, int len, int flags, const sockaddr * to, int tolen)
 {
-	UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
+	//UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
 
 	char* encryptBuf = (char*)malloc(len);
 	sgx_SendtoEncrypt((char*)buf, encryptBuf, len);
 
-	int returnValue = sendto(s, encryptBuf, len, flags, to, tolen);
+	int returnValue = sendtoHook(s, encryptBuf, len, flags, to, tolen);
 
 	free(encryptBuf);
 
-	HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, sendtoHook);
+	//HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, sendtoHook);
 	return returnValue;
 }
 
 int WINAPI safe_recvfrom(SOCKET s, char * buf, int len, int flags, sockaddr * from, int * fromlen)
 {
-	UnHookFunction(HOOK_NET_MODULE, "recvfrom", recvfromHook);
+	//UnHookFunction(HOOK_NET_MODULE, "recvfrom", recvfromHook);
 
 	char* decryptBuf = (char*)malloc(len);
-	int returnValue = recvfrom(s, decryptBuf, len, flags, from, fromlen);
+	int returnValue = recvfromHook(s, decryptBuf, len, flags, from, fromlen);
 	sgx_recvfromDecrypt(decryptBuf, buf, len);
 	free(decryptBuf);
-	HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, recvfromHook);
+	//HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, recvfromHook);
 	return returnValue;
 }
 
 extern "C" int unsafe_sendto(int s, char * buf, int len, int flags, const sockaddr * to, int tolen)
 {
-	UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
+	//UnHookFunction(HOOK_NET_MODULE, "sendto", sendtoHook);
 
-	int returnValue = sendto(s, buf, len, flags, to, tolen);
+	int returnValue = sendtoHook(s, buf, len, flags, to, tolen);
 
-	HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, sendtoHook);
+	//HookFunction(HOOK_NET_MODULE, "sendto", (LPVOID)safe_sendto, sendtoHook);
 	return returnValue;
 }
 
 extern "C" int unsafe_recvfrom(int s, char * buf, int len, int flags, sockaddr * from, int * fromlen)
 {
-	UnHookFunction(HOOK_NET_MODULE, "recvfrom", recvfromHook);
+	//UnHookFunction(HOOK_NET_MODULE, "recvfrom", recvfromHook);
 
-	int returnValue = recvfrom(s, buf, len, flags, from, fromlen);
+	int returnValue = recvfromHook(s, buf, len, flags, from, fromlen);
 
-	HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, recvfromHook);
+	//HookFunction(HOOK_NET_MODULE, "recvfrom", (LPVOID)safe_recvfrom, recvfromHook);
 	return returnValue;
 }
 
 BOOL WINAPI safe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
 {
-	UnHookFunction(HOOK_FILE_MODULE, "ReadFile", readFileHook);
+	//UnHookFunction(HOOK_FILE_MODULE, "ReadFile", readFileHook);
 
 
 	BOOL returnValue;
@@ -304,7 +343,7 @@ BOOL WINAPI safe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToR
 		int realSize = nNumberOfBytesToRead % SM4_BLOCK_SIZE == 0 ? nNumberOfBytesToRead : \
 			(nNumberOfBytesToRead / SM4_BLOCK_SIZE)*SM4_BLOCK_SIZE + SM4_BLOCK_SIZE;
 		char * decryptBuf = (char*)malloc(realSize);
-		returnValue = ReadFile(hFile, (LPVOID)decryptBuf, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+		returnValue = readFileHook(hFile, (LPVOID)decryptBuf, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 
 		sgx_ReadFileDecrypt(decryptBuf, (char*)lpBuffer, nNumberOfBytesToRead);
 		// printf("%s\n", decryptBuf);
@@ -314,19 +353,19 @@ BOOL WINAPI safe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToR
 	}
 	else
 	{
-		returnValue = ReadFile(hFile, (LPVOID)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+		returnValue = readFileHook(hFile, (LPVOID)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 	}
-	HookFunction(HOOK_FILE_MODULE, "ReadFile", (LPVOID)safe_ReadFile, readFileHook);
+	//HookFunction(HOOK_FILE_MODULE, "ReadFile", (LPVOID)safe_ReadFile, readFileHook);
 	return returnValue;
 }
 
 HANDLE WINAPI safe_CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 {
-	UnHookFunction(HOOK_FILE_MODULE, "CreateFileW", createFileHook);
-	HANDLE returnValue = CreateFile(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+	//UnHookFunction(HOOK_FILE_MODULE, "CreateFileW", createFileHook);
+	HANDLE returnValue = createFileHook(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 	if (returnValue == INVALID_HANDLE_VALUE)
 	{
-		HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, createFileHook);
+		//HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, createFileHook);
 		return returnValue;
 	}
 	auto it = fileDecryptList.begin();
@@ -340,17 +379,17 @@ HANDLE WINAPI safe_CreateFile(LPCTSTR lpFileName, DWORD dwDesiredAccess, DWORD d
 		it++;
 	}
 	wprintf(L"create filew: %s\n", lpFileName);
-	HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, createFileHook);
+	//HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, createFileHook);
 	return returnValue;
 }
 
 HANDLE WINAPI safe_CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile)
 {
-	UnHookFunction(HOOK_FILE_MODULE, "CreateFileA", createFileAHook);
-	HANDLE returnValue = CreateFileA(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+	//UnHookFunction(HOOK_FILE_MODULE, "CreateFileA", createFileAHook);
+	HANDLE returnValue = createFileAHook(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 	if (returnValue == INVALID_HANDLE_VALUE)
 	{
-		HookFunction(HOOK_FILE_MODULE, "CreateFileA", (LPVOID)safe_CreateFileA, createFileAHook);
+		//HookFunction(HOOK_FILE_MODULE, "CreateFileA", (LPVOID)safe_CreateFileA, createFileAHook);
 		return returnValue;
 	}
 	auto it = fileDecryptList.begin();
@@ -366,18 +405,18 @@ HANDLE WINAPI safe_CreateFileA(LPCSTR lpFileName, DWORD dwDesiredAccess, DWORD d
 		it++;
 	}
 
-	HookFunction(HOOK_FILE_MODULE, "CreateFileA", (LPVOID)safe_CreateFileA, createFileAHook);
+	//HookFunction(HOOK_FILE_MODULE, "CreateFileA", (LPVOID)safe_CreateFileA, createFileAHook);
 	return returnValue;
 }
 
 BOOL WINAPI safe_CloseHandle(HANDLE hObject)
 {
-	UnHookFunction(HOOK_FILE_MODULE, "CloseHandle", closeHandleHook);
+	//UnHookFunction(HOOK_FILE_MODULE, "CloseHandle", closeHandleHook);
 
-	BOOL returnValue = CloseHandle(hObject);
+	BOOL returnValue = closeHandleHook(hObject);
 	fileHandles.remove(hObject);
 
-	HookFunction(HOOK_FILE_MODULE, "CloseHandle", (LPVOID)safe_CloseHandle, closeHandleHook);
+	//HookFunction(HOOK_FILE_MODULE, "CloseHandle", (LPVOID)safe_CloseHandle, closeHandleHook);
 	return returnValue;
 }
 
@@ -394,37 +433,37 @@ HANDLE  unsafe_CreateFile(
 	HANDLE                hTemplateFile
 )
 {
-	UnHookFunction(HOOK_FILE_MODULE, "CreateFileW", createFileHook);
-	HANDLE returnValue = CreateFile(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
-	HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, createFileHook);
+	//UnHookFunction(HOOK_FILE_MODULE, "CreateFileW", createFileHook);
+	HANDLE returnValue = createFileHook(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
+	//HookFunction(HOOK_FILE_MODULE, "CreateFileW", (LPVOID)safe_CreateFile, createFileHook);
 	return returnValue;
 }
 
 BOOL  unsafe_ReadFile(HANDLE hFile, LPVOID lpBuffer, DWORD nNumberOfBytesToRead, LPDWORD lpNumberOfBytesRead, LPOVERLAPPED lpOverlapped)
 {
-	int isHooked = checkReadFileHooked();
-	if (!isHooked)
-	{
-		return ReadFile(hFile, (LPVOID)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);;
-	}
-	UnHookFunction(HOOK_FILE_MODULE, "ReadFile", readFileHook);
+	//int isHooked = checkReadFileHooked();
+	//if (!isHooked)
+	//{
+	//	return ReadFile(hFile, (LPVOID)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);;
+	//}
+	//UnHookFunction(HOOK_FILE_MODULE, "ReadFile", readFileHook);
 
 
 	BOOL returnValue;
 
-	returnValue = ReadFile(hFile, (LPVOID)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
+	returnValue = readFileHook(hFile, (LPVOID)lpBuffer, nNumberOfBytesToRead, lpNumberOfBytesRead, lpOverlapped);
 
-	HookFunction(HOOK_FILE_MODULE, "ReadFile", (LPVOID)safe_ReadFile, readFileHook);
+	//HookFunction(HOOK_FILE_MODULE, "ReadFile", (LPVOID)safe_ReadFile, readFileHook);
 	return returnValue;
 }
 
 
 BOOL unsafe_CloseHandle(HANDLE hObject)
 {
-	UnHookFunction(HOOK_FILE_MODULE, "CloseHandle", closeHandleHook);
+	//UnHookFunction(HOOK_FILE_MODULE, "CloseHandle", closeHandleHook);
 
-	BOOL returnValue = CloseHandle(hObject);
+	BOOL returnValue = closeHandleHook(hObject);
 
-	HookFunction(HOOK_FILE_MODULE, "CloseHandle", (LPVOID)safe_CloseHandle, closeHandleHook);
+	//HookFunction(HOOK_FILE_MODULE, "CloseHandle", (LPVOID)safe_CloseHandle, closeHandleHook);
 	return returnValue;
 }
