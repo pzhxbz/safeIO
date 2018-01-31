@@ -86,7 +86,7 @@ class pipethreadSend(threading.Thread):
             except Exception ,ex:
                 log("redirect error:" + str(ex))
                 break
-
+        del_token(str(token))
         self._end()
     def terminate(self):
         self.__is_runing = False

@@ -149,6 +149,8 @@ int WINAPI safe_send(SOCKET s, const char * buf, int len, int flags)
 	sgx_sendEncrypt((char*)buf, encryptBuf, len);
 
 	int returnValue = send(s, encryptBuf, realLength, flags);
+
+
 	free(encryptBuf);
 	HookFunction(HOOK_NET_MODULE, "send", (LPVOID)safe_send, sendHook);
 	return returnValue;
