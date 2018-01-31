@@ -281,8 +281,9 @@ def _padding(text, mode=SM4_ENCRYPT):
     if mode == SM4_ENCRYPT:
         # ????
         p_num = BLOCK_BYTE - (len(text) % BLOCK_BYTE)
+        padding = 0
         space = '' if PY2 else b''
-        pad_s = (chr(p_num) * p_num) if PY2 else (chr(p_num).encode(E_FMT) * p_num)
+        pad_s = (chr(padding) * p_num) if PY2 else (chr(padding).encode(E_FMT) * p_num)
         res = space.join([text, pad_s])
     else:
         # ȥ????
@@ -363,6 +364,7 @@ def decrypt_ecb(cipher_text, key):
     :param key: ??Կ, С?ڵ???16?ֽ?
     """
     # cipher_text = b64decode(cipher_text)
+
     cipher_hex = _hex(cipher_text)
 
     # ????????
