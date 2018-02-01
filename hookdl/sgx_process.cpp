@@ -79,10 +79,15 @@ bool initializeEnclave()
 	unsafe_ReadFile(programHandle, program, programSize, &last, NULL);
 
 	unsafe_CloseHandle(programHandle);
-
-	initCheck(enclaveId, (char*)program, programSize);
+	int results = 0;
+	initCheck(enclaveId, (char*)program, programSize, &results);
 	free(program);
-	return true;
+	if (results != 1)
+	{
+		MessageBox(NULL, L"error", L"init sgx failed!", MB_OK);
+		exit(-1);
+	}
+	return 1;
 }
 bool destroyEnclave()
 {

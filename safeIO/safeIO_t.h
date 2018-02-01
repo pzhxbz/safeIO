@@ -20,7 +20,7 @@ void recvDecrypt(char* src, char* des, size_t len);
 void ReadFileDecrypt(char* src, char* des, size_t len);
 void SendtoEncrypt(char* src, char* des, size_t len);
 void recvfromDecrypt(char* src, char* des, size_t len);
-void initCheck(char* src, size_t len);
+void initCheck(char* src, size_t len, int* results);
 void cpp_int_test();
 
 sgx_status_t SGX_CDECL unsafe_send(int* retval, int s, char* buf, int len, int flags);

@@ -50,6 +50,7 @@ typedef struct ms_recvfromDecrypt_t {
 typedef struct ms_initCheck_t {
 	char* ms_src;
 	size_t ms_len;
+	int* ms_results;
 } ms_initCheck_t;
 
 
@@ -318,9 +319,13 @@ static sgx_status_t SGX_CDECL sgx_initCheck(void* pms)
 	size_t _tmp_len = ms->ms_len;
 	size_t _len_src = _tmp_len;
 	char* _in_src = NULL;
+	int* _tmp_results = ms->ms_results;
+	size_t _len_results = sizeof(*_tmp_results);
+	int* _in_results = NULL;
 
 	CHECK_REF_POINTER(pms, sizeof(ms_initCheck_t));
 	CHECK_UNIQUE_POINTER(_tmp_src, _len_src);
+	CHECK_UNIQUE_POINTER(_tmp_results, _len_results);
 
 	if (_tmp_src != NULL) {
 		_in_src = (char*)malloc(_len_src);
@@ -331,9 +336,21 @@ static sgx_status_t SGX_CDECL sgx_initCheck(void* pms)
 
 		memcpy(_in_src, _tmp_src, _len_src);
 	}
-	initCheck(_in_src, _tmp_len);
+	if (_tmp_results != NULL) {
+		if ((_in_results = (int*)malloc(_len_results)) == NULL) {
+			status = SGX_ERROR_OUT_OF_MEMORY;
+			goto err;
+		}
+
+		memset((void*)_in_results, 0, _len_results);
+	}
+	initCheck(_in_src, _tmp_len, _in_results);
 err:
 	if (_in_src) free(_in_src);
+	if (_in_results) {
+		memcpy(_tmp_results, _in_results, _len_results);
+		free(_in_results);
+	}
 
 	return status;
 }

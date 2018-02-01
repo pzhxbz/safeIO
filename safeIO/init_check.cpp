@@ -106,11 +106,12 @@ void initAttestation()
 }
 
 
-void initCheck(char * src, size_t len)
+void initCheck(char * src, size_t len, int* results)
 {
 
 	sm3((const uint8_t*)src, len, sm3Hash);
 	initAttestation();
+	*results = isVerify;
 }
 
 

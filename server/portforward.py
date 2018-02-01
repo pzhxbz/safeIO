@@ -65,7 +65,13 @@ class pipethreadSend(threading.Thread):
         print('recv : ' + decrypt_message)
 
         # add verify here
-        self.sink.send(decrypt_message)
+        try:
+            self.sink.send(decrypt_message)
+        
+        except Exception:
+            self._end()
+            return
+            
         self.source.settimeout(60)
         while self.__is_runing:
             try:
@@ -141,7 +147,12 @@ class pipethreadRecv(threading.Thread):
             return
         encrypt_message = pysm4.encrypt_ecb(data,key)
         print('send : ' + data)
-        self.sink.send(encrypt_message)
+        try:
+            self.sink.send(encrypt_message)
+        
+        except Exception:
+            self._end()
+            return
         self.source.settimeout(60)
         while self.__is_runing:
             try:

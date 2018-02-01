@@ -28,7 +28,7 @@ struct ServerHello
 	int token;
 };
 
-extern "C" void initCheck(char* src, size_t len);
+extern "C" void initCheck(char* src, size_t len, int* results);
 
 unsigned char* getKey();
 int getToken();
