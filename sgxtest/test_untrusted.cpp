@@ -5,7 +5,7 @@
 #include <WS2tcpip.h>
 
 #pragma comment(lib, "ws2_32.lib")
-
+// _WINSOCK_DEPRECATED_NO_WARNINGS
 
 int unsafe_initSocket(int * s, char * ip, int port)
 {

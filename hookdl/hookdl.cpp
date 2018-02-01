@@ -13,10 +13,20 @@
 #include "safeIO_u.h"
 #include <MinHook.h>
 
+#ifdef _WIN32
+#pragma comment(lib, "libMinHook-x86-v140-mdd.lib")
+#endif // _WIN32
+
+#ifdef _WIN64
+#pragma comment(lib, "libMinHook-x64-v140-mdd.lib")
+#endif // _WIN64
+
+
+
 #pragma comment(lib, "ws2_32.lib")
 #define HOOK_NET_MODULE (L"ws2_32.dll")
 #define HOOK_FILE_MODULE (L"kernel32.dll")
-#define JMP_LENGTH 6
+// #define JMP_LENGTH 6
 
 // BYTE jmp[JMP_LENGTH] = { 0xe9,0x00, 0x00, 0x00, 0x00 ,0xc3 };
 
@@ -46,6 +56,8 @@ typedef HANDLE(WINAPI *CreateFileAFunc)(
 	HANDLE                hTemplateFile
 	);
 typedef BOOL(WINAPI *CloseHandleFunc)(HANDLE hObject);
+
+
 sendFunc sendHook = NULL;
 recvFunc recvHook = NULL;
 sendtoFunc sendtoHook = NULL;

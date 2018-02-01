@@ -72,6 +72,7 @@ void testReadFile()
 int main()
 {
 	HANDLE lib = LoadLibrary(DLL_NAME);
+	//testSocket();
 	testReadFile();
 	return 0;
 }
