@@ -1,42 +1,80 @@
 #include <stdio.h>  
+#include <stdlib.h>
+#include <time.h>
 #include <Winsock2.h>
 #include <openssl/conf.h>
 #include <openssl/evp.h>
 #include <openssl/err.h>
+#include <openssl/rsa.h>
+#include "sm3.h"
+#include "sm4.h"
 #pragma comment(lib,"WS2_32.lib")
 #pragma warning(disable:4996)
 
-int changeCipherSpec = 0xfe
+int clientShakeHand(SOCKET sockClient);
+void digest_message(const unsigned char *message, size_t message_len, unsigned char **digest, unsigned int *digest_len)
+
+char RsaPublicKey[] = "-----BEGIN PUBLIC KEY-----\n\
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAnOvAI4RlfQegd+MJLx7b\n\
+Gce77+/sAwk6YSG2ScraWjsJk4ZFZw2JdJo/mhN10Hi5GmR75NAYXj1sdR60/nZM\n\
+nc+pdve6XuKnGL5yo59xF4GoUiRBzkouFPYM8Eidmik0zoADaPbQw/ve+h3YTEss\n\
+lHjpHE+1vt1XyS5+7yIkjAvcFMDNAafT/CsIqvuWIwgeDK0TwJNqtfUWGDv192ek\n\
+hW996whxS0OLNWZOXiCOmvh6K3q5FBGPcYpgwZb0eSOux0gCf8mzB4BFnJ2LkFe+\n\
+oIqPQU7PD4gyF6wv1Pw2pgwpPIVO0qWtW+VrHv9WrH+kryuR1mvP/uiDHKIZf0DJ\n\
+uQIDAQAB\n\
+-----END PUBLIC KEY-----\n";
+int changeCipherSpec = 0xfe;
+srand((unsigned)time(0));
+
+void digest_message(const unsigned char *message, size_t message_len, unsigned char **digest, unsigned int *digest_len)
+{
+	EVP_MD_CTX *mdctx;
+
+	if ((mdctx = EVP_MD_CTX_create()) == NULL) handleErrors();
+	if (1 != EVP_DigestInit_ex(mdctx, EVP_sha256(), NULL)) handleErrors();
+	if (1 != EVP_DigestUpdate(mdctx, message, message_len)) handleErrors();
+	if ((*digest = (unsigned char *)OPENSSL_malloc(EVP_MD_size(EVP_sha256()))) == NULL) handleErrors();
+	if (1 != EVP_DigestFinal_ex(mdctx, *digest, digest_len)) handleErrors();
+
+	EVP_MD_CTX_destroy(mdctx);
+}
 
 int clientShakeHand(SOCKET sockClient)
 {
-	// send TLS v1.2
-	// send sm3, sm4
-	// send rand1
+	char sendBuf[256], recvBuf[256];
+	sprintf(sendBuf, "TLS v1.2");
+	send(sockConn, sendBuf, strlen(sendBuf) + 1, 0);
+	sprintf(sendBuf, "sm3, sm4");
+	send(sockConn, sendBuf, strlen(sendBuf) + 1, 0);
 
-	char recvBuf[50];
-	recv(sockClient, recvBuf, 50, 0);
+	char clientRandom[128];
+	for (int i = 0; i < 127; i++) clientRandom[i] = (rand() % 0xff) + 1;
+	clientRandom[127] = 0
+	sprintf(sendBuf, clientRandom);
+	send(sockConn, sendBuf, strlen(sendBuf) + 1, 0);
+
+	recv(sockClient, recvBuf, 256, 0);
 	if (strcmp(recvBuf, "TLS v1.2")) return 1; // closesocket(sockConn);
 
-	recv(sockConn, recvBuf, 50, 0);
+	recv(sockConn, recvBuf, 256, 0);
 	if (strcmp(recvBuf, "sm3, sm4")) return 1; // closesocket(sockConn);
 
-	recv(sockClient, recvBuf, 50, 0);
-	// int rand2 = recvBuf;
-	recv(sockClient, recvBuf, 50, 0);
-	// key pubKey = recvBuf;
-	// assert pubKey == serverPubKey
+	recv(sockClient, recvBuf, 256, 0);
+	char* serverRandom = recvBuf;
+	recv(sockClient, recvBuf, 256, 0);
+	if (strcmp(recvBuf, RsaPublicKey)) return 1; // closesocket(sockConn);
 		
-	// send encrypt(rand3, pubKey);
-	// sessionKey = geneKey(rand1, rand2, rand3);
-	// send 0xfe; /*ChangeCipherSpec*/
+	// send encrypt(preMasterKey, pubKey);
+	// sessionKey = genKey(preMasterKey, clientKey, serverKey);
+	sprintf(sendBuf, "%d", changeCipherSpec);
+	send(sockConn, sendBuf, strlen(sendBuf) + 1, 0);
 	// send encrypt("Finished", sessionKey);
-	// send encrypt(sm3(sendedAll), sessionKey);
-	recv(sockClient, recvBuf, 50, 0);
+	// send encrypt(sm3(sendAll), sessionKey);
+	recv(sockClient, recvBuf, 256, 0);
 	if (recvBuf != changeCipherSpec) return 1; // closesocket(sockConn);
 		
-	recv(sockClient, recvBuf, 50, 0);
-	if (strcmp(sm3(sendedAll), decrypt(recvBuf)) return 1; // closesocket(sockConn);
+	recv(sockClient, recvBuf, 256, 0);
+	if (strcmp(sm3(sendAll), decrypt(recvBuf, sessionKey)) return 1; // closesocket(sockConn);
 
 	return 0;
 }
